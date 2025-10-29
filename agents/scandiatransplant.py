@@ -70,7 +70,7 @@ class Scandiatransplant:
         return removed
 
 
-    def remove_donor(self, donor_id, verbose=False):
+    def remove_donor(self, donor_id, verbose=True):
         removed = False
         scandiatransplant_df = self.donor_list.df
 

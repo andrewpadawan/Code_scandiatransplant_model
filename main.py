@@ -2,15 +2,17 @@ import book_keeping
 from patient_generators import *
 from patient_generators import generating_utils
 from utils import scenario_loader
-import sys
+from utils.logger import log_timestep
 import os
 import pandas as pd 
+from matching.match_donor_patient import *
+import sys
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
-
-#donor_generator.generate_donor(20)
-#recipient_generator.generate_recipient(20)
+logger = get_matching_logger()
+#donor_generator.generate_donor(10, 1, 10)
+#recipient_generator.generate_recipient(40, 1, 10)
 
 # LOAD SCENARIOS
 scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\basic_scenario.json")
@@ -31,6 +33,7 @@ timesteps_to_process = [t for t in all_timesteps if t > 0]
 
 # Loop through timesteps starting from 1
 for t in timesteps_to_process:
+    log_timestep(logger, t)
     print("TIMESTEP " + str(t)+ " ____________________________")
     recipients_at_t = recipient_groups.get_group(t) if t in recipient_groups.groups else pd.DataFrame()
     donors_at_t = donor_groups.get_group(t) if t in donor_groups.groups else pd.DataFrame()
@@ -51,5 +54,14 @@ for t in timesteps_to_process:
         donor_row_df = pd.DataFrame([row])
         scandiatransplant.add_donor(donor_row_df)
 
-scandiatransplant.recipient_waitlist.sort("TIMESTEP_ENTERED")
-scandiatransplant.donor_list.sort("TIMESTEP_ENTERED")
+    print("Before matching")
+    print(scandiatransplant.donor_list.df)
+
+
+    scandiatransplant= matching(scandiatransplant, "greedy", False)
+    print("After matching")
+    print(scandiatransplant.donor_list.df)
+
+
+print(scandiatransplant.recipient_waitlist.df)
+print(scandiatransplant.donor_list.df)

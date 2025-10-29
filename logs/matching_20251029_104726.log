@@ -1,0 +1,11 @@
+2025-10-29 10:47:26,384 - Running matching with heuristic: greedy
+2025-10-29 10:47:26,385 - Donor D8 (City: Copenhagen, Country: Denmark, Blood: O), Rhesus: POS, Entered timestep: 2matched with Recipient R8 (City: Copenhagen, Country: Denmark,  Blood: A), Rhesus: POS, Entered timestep: 0
+2025-10-29 10:47:26,386 - Donor D8 (City: Copenhagen, Country: Denmark, Blood: O), Rhesus: POS, Entered timestep: 2matched with Recipient R23 (City: Helsinki, Country: Finland,  Blood: B), Rhesus: POS, Entered timestep: 0
+2025-10-29 10:47:26,400 - Donor D5 (City: Gothenburg, Country: Sweden, Blood: O), Rhesus: POS, Entered timestep: 5matched with Recipient R27 (City: Copenhagen, Country: Denmark,  Blood: O), Rhesus: POS, Entered timestep: 0
+2025-10-29 10:47:26,400 - Donor D5 (City: Gothenburg, Country: Sweden, Blood: O), Rhesus: POS, Entered timestep: 5matched with Recipient R15 (City: Helsinki, Country: Finland,  Blood: A), Rhesus: POS, Entered timestep: 0
+2025-10-29 10:47:26,405 - Donor D9 (City: Copenhagen, Country: Denmark, Blood: O), Rhesus: POS, Entered timestep: 6matched with Recipient R9 (City: Skane, Country: Sweden,  Blood: O), Rhesus: POS, Entered timestep: 0
+2025-10-29 10:47:26,405 - Donor D9 (City: Copenhagen, Country: Denmark, Blood: O), Rhesus: POS, Entered timestep: 6matched with Recipient R11 (City: Helsinki, Country: Finland,  Blood: A), Rhesus: POS, Entered timestep: 0
+2025-10-29 10:47:26,417 - Donor D2 (City: Helsinki, Country: Finland, Blood: A), Rhesus: POS, Entered timestep: 7matched with Recipient R29 (City: Skane, Country: Sweden,  Blood: A), Rhesus: POS, Entered timestep: 0
+2025-10-29 10:47:26,417 - Donor D2 (City: Helsinki, Country: Finland, Blood: A), Rhesus: POS, Entered timestep: 7matched with Recipient R10 (City: Helsinki, Country: Finland,  Blood: A), Rhesus: POS, Entered timestep: 0
+2025-10-29 10:47:26,438 - Donor D6 (City: Skane, Country: Sweden, Blood: A), Rhesus: NEG, Entered timestep: 10matched with Recipient R14 (City: Uppsala, Country: Sweden,  Blood: A), Rhesus: POS, Entered timestep: 0
+2025-10-29 10:47:26,438 - Donor D6 (City: Skane, Country: Sweden, Blood: A), Rhesus: NEG, Entered timestep: 10matched with Recipient R7 (City: Helsinki, Country: Finland,  Blood: A), Rhesus: NEG, Entered timestep: 0

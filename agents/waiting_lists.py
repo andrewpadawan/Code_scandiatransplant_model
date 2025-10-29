@@ -7,7 +7,7 @@ class WaitList:
         return len(self.df)
     def sort(self, header):
         self.df.sort_values(by=str(header), inplace=True)
-        print(self.df)
+        #print(self.df)
 class LocalWaitList(WaitList):
     def __init__(self, city, df=None):
         super().__init__(df)

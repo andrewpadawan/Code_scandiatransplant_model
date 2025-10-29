@@ -11,7 +11,7 @@ rh_dist = {'POS': 85, 'NEG': 15}
 
 
 
-def generate_donor(total_samples):
+def generate_donor(total_samples, min_timestep, max_timestep):
     abo, rh = generate_blood_types(abo_dist, rh_dist, total_samples)
     city_list, country_list = generate_locations(total_samples)
     donor_ids= []
@@ -33,7 +33,7 @@ def generate_donor(total_samples):
     df["GRAFT_TYPE"]= "KD"
     df["CITY"]= city_list
     df["COUNTRY"]= country_list
-    df["TIMESTEP_ENTERED"]= generate_timesteps(total_samples, 0)
+    df["TIMESTEP_ENTERED"]= generate_timesteps(total_samples, 0, min_timestep, max_timestep)
     # Preview
     df.to_csv('testing_files/basic_donor.csv', index=False)
 
