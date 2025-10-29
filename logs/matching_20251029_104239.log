@@ -1,9 +1,0 @@
-2025-10-29 10:42:39,262 - Running matching with heuristic: greedy
-2025-10-29 10:42:39,271 - Donor D6 (City: Helsinki, Country: Finland, Blood: A), Rhesus: NEG matched with Recipient R7 (City: Copenhagen, Country: Denmark,  Blood: O), Rhesus: NEG
-2025-10-29 10:42:39,271 - Donor D6 (City: Helsinki, Country: Finland, Blood: A), Rhesus: NEG matched with Recipient R19 (City: Helsinki, Country: Finland,  Blood: B), Rhesus: POS
-2025-10-29 10:42:39,292 - Running matching with heuristic: greedy
-2025-10-29 10:42:39,292 - Donor D9 (City: Copenhagen, Country: Denmark, Blood: A), Rhesus: POS matched with Recipient R12 (City: Copenhagen, Country: Denmark,  Blood: A), Rhesus: POS
-2025-10-29 10:42:39,292 - Donor D9 (City: Copenhagen, Country: Denmark, Blood: A), Rhesus: POS matched with Recipient R13 (City: Helsinki, Country: Finland,  Blood: O), Rhesus: POS
-2025-10-29 10:42:39,310 - Running matching with heuristic: greedy
-2025-10-29 10:42:39,312 - Donor D1 (City: Helsinki, Country: Finland, Blood: AB), Rhesus: POS matched with Recipient R14 (City: Copenhagen, Country: Denmark,  Blood: A), Rhesus: POS
-2025-10-29 10:42:39,312 - Donor D1 (City: Helsinki, Country: Finland, Blood: AB), Rhesus: POS matched with Recipient R29 (City: Oslo, Country: Norway,  Blood: O), Rhesus: POS
