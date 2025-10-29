@@ -55,10 +55,30 @@ def generate_locations(total_samples):
     weights = [pop / total_pop for pop in populations]
 
     city_list= []
+    country_list= []
 
     for _ in range(total_samples):
-            city_list.append(random.choices(cities, weights=weights, k=total_samples)[0])
+            generated_city= random.choices(cities, weights=weights, k=total_samples)[0]
+            city_list.append(generated_city)
+            country_list.append(locations.city_country_map.get(generated_city))
     
-    print(city_list)
-    return city_list
+    return city_list, country_list
 
+import numpy as np
+
+def generate_timesteps(total_samples, zero_fraction=0.6, min_timestep=1, max_timestep=365):
+    # Calculate how many should have timestep 0
+    zero_count = int(total_samples * zero_fraction)
+
+    # Assign timestep 0
+    fixed_timesteps = [0] * zero_count
+
+    # Uniformly distribute the rest
+    remaining_count = total_samples - zero_count
+    random_timesteps = np.random.randint(min_timestep, max_timestep + 1, size=remaining_count)
+
+    # Combine and shuffle
+    all_timesteps = fixed_timesteps + list(random_timesteps)
+    np.random.shuffle(all_timesteps)
+
+    return all_timesteps
