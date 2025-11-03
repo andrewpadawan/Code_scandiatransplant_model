@@ -123,17 +123,29 @@ def create_city_geodataframe():
     return gpd.GeoDataFrame(df, geometry="geometry", crs="EPSG:4326")
 
 def animate_organ_flows(csv_path, shapefile_path):
- 
+    import matplotlib.pyplot as plt
+    from matplotlib import gridspec
+    from matplotlib.widgets import Button, Slider
+    from matplotlib import colormaps
+    from collections import defaultdict
+    import pandas as pd
 
-    organ_flows = pd.read_csv(csv_path)
+    def normalize_organ(name):
+        name = name.strip().lower()
+        if name in ['kd', 'kidney']:
+            return 'Kidney'
+        elif name in ['lv', 'liver']:
+            return 'Liver'
+        elif name in ['ht', 'heart']:
+            return 'Heart'
+        return name.capitalize()
+
+    organ_flows = pd.read_csv(csv_path).sort_values("TIMESTEP")
     europe_clipped = load_europe_shapefile(shapefile_path)
     manual_gdf = create_city_geodataframe()
 
     grouped = organ_flows.groupby("TIMESTEP")
-    timestep_paths = []
-    timestep_labels = []
-    flow_counts = []
-    flow_metadata = []
+    timestep_paths, timestep_labels, flow_counts, flow_metadata = [], [], [], []
 
     for ts, group in grouped:
         paths = build_synchronized_paths(group, steps_per_timestep=25)
@@ -147,21 +159,60 @@ def animate_organ_flows(csv_path, shapefile_path):
     color_maps = []
     for count in flow_counts:
         cmap = colormaps.get_cmap('tab20').resampled(count)
-        colors = [cmap(i) for i in range(count)]
-        color_maps.append(colors)
+        color_maps.append([cmap(i) for i in range(count)])
 
     for i, paths in enumerate(timestep_paths):
         max_len = max(len(p) for p in paths)
         for step in range(max_len):
-            frame_points = []
-            for path in paths:
-                if step < len(path):
-                    frame_points.append(path[step])
-                else:
-                    frame_points.append(path[-1])
+            frame_points = [path[step] if step < len(path) else path[-1] for path in paths]
             frames.append(frame_points)
             frame_timestep_indices.append(i)
 
+    # Precompute cumulative organ tables per frame
+    precomputed_tables = []
+    cumulative_arrivals = defaultdict(lambda: defaultdict(int))
+    cumulative_departures = defaultdict(lambda: defaultdict(int))
+    seen_flows = set()
+
+    for frame_idx in range(len(frames)):
+        current_timestep = frame_timestep_indices[frame_idx]
+        offset = sum(flow_counts[:current_timestep])
+        paths = timestep_paths[current_timestep]
+        meta = flow_metadata[current_timestep]
+        new_arrival_cities = set()
+
+        for j, path in enumerate(paths):
+            global_index = offset + j
+            if global_index in seen_flows:
+                continue
+            if global_index not in seen_flows:
+                seen_flows.add(global_index)
+                row = meta.iloc[j]
+                organ_in = normalize_organ(row.RECIPIENT_ORGAN)
+                organ_out = normalize_organ(row.DONOR_GRAFT_TYPE)
+                cumulative_arrivals[organ_in][row.RECIPIENT_CITY] += 1
+                cumulative_departures[organ_out][row.DONOR_CITY] += 1
+                new_arrival_cities.add(row.RECIPIENT_CITY)
+
+        organ_tables = {}
+        organ_types = sorted(set(cumulative_arrivals.keys()) | set(cumulative_departures.keys()))
+        for organ in organ_types:
+            arrivals = cumulative_arrivals[organ]
+            departures = cumulative_departures[organ]
+            cities = sorted(set(arrivals.keys()) | set(departures.keys()))
+            rows = []
+            highlights = set()
+            for city in cities:
+                arr = arrivals.get(city, 0)
+                dep = departures.get(city, 0)
+                rows.append([city, arr, dep])
+                if city in new_arrival_cities:
+                    highlights.add(city)
+            organ_tables[organ] = {"rows": rows, "highlights": highlights}
+
+        precomputed_tables.append(organ_tables)
+
+    # Set up figure
     fig = plt.figure(figsize=(16, 10))
     gs = gridspec.GridSpec(4, 2, height_ratios=[10, 1, 0.5, 0.5], width_ratios=[3, 1])
     ax = fig.add_subplot(gs[0, 0])
@@ -174,43 +225,29 @@ def animate_organ_flows(csv_path, shapefile_path):
     europe_clipped.plot(ax=ax, color='lightgray', edgecolor='black')
     manual_gdf.plot(ax=ax, marker='^', facecolor='none', edgecolor='black', markersize=80)
     for _, row in manual_gdf.iterrows():
-        name = row['NAME']
-        x, y = row.geometry.x, row.geometry.y
-        dx, dy = 0.1, 0.1
-        if name == 'Copenhagen':
-            dx, dy = 0.1, -0.15
-        elif name == 'Skane':
-            dx, dy = -0.2, 0.1
+        name, x, y = row['NAME'], row.geometry.x, row.geometry.y
+        dx, dy = (0.1, -0.15) if name == 'Copenhagen' else (-0.2, 0.1) if name == 'Skane' else (0.1, 0.1)
         ax.text(x + dx, y + dy, name, fontsize=9, ha='left', va='bottom')
 
     progress_bar, = progress_ax.plot([], [], color='green', lw=4)
     progress_ax.set_xlim(0, len(frames))
     progress_ax.set_ylim(0, 1)
     progress_ax.axis('off')
-
     title_text = fig.suptitle("", fontsize=16, color='darkred')
 
     slider = Slider(slider_ax, 'Frame', 0, len(frames) - 1, valinit=0, valstep=1)
-    is_playing = [True]
-    current_frame = [0]
-    is_updating_slider = [False]
-    last_timestep = [-1]
-    points = []
-
     button = Button(button_ax, 'Pause', color='lightgray', hovercolor='lightblue')
-    button.on_clicked(lambda event: toggle_play())
+    is_playing, current_frame, is_updating_slider, last_timestep = [True], [0], [False], [-1]
+    points = []
+    organ_axes = {}
 
+    button.on_clicked(lambda event: toggle_play())
     def toggle_play():
         is_playing[0] = not is_playing[0]
         button.label.set_text('Play' if not is_playing[0] else 'Pause')
 
-    cumulative_arrivals_by_organ = defaultdict(lambda: defaultdict(list))
-    cumulative_departures_by_organ = defaultdict(lambda: defaultdict(list))
-    flow_arrived_flags = [False] * sum(flow_counts)
-
     def update(frame):
         current_timestep = frame_timestep_indices[frame]
-
         if current_timestep != last_timestep[0]:
             last_timestep[0] = current_timestep
             for pt in points:
@@ -224,51 +261,27 @@ def animate_organ_flows(csv_path, shapefile_path):
             pt.set_data([lon], [lat])
         progress_bar.set_data([0, frame], [0.5, 0.5])
         title_text.set_text(f"Organ Flow Animation — TIMESTEP: {timestep_labels[current_timestep]}")
-
         is_updating_slider[0] = True
         slider.set_val(frame)
         is_updating_slider[0] = False
-
-        new_arrival_cities = set()
-        offset = sum(flow_counts[:current_timestep])
-        paths = timestep_paths[current_timestep]
-        meta = flow_metadata[current_timestep]
-
-        for j, path in enumerate(paths):
-            global_index = offset + j
-            if frame < len(frames) and j < len(frames[frame]):
-                if not flow_arrived_flags[global_index]:
-                    if frame > 0 and frames[frame][j] == path[-1] and frames[frame - 1][j] != path[-1]:
-                        flow_arrived_flags[global_index] = True
-                        row = meta.iloc[j]
-                        organ_in = normalize_organ(row.RECIPIENT_ORGAN)
-                        organ_out = normalize_organ(row.DONOR_GRAFT_TYPE)
-                        cumulative_arrivals_by_organ[organ_in][row.RECIPIENT_CITY].append(organ_in)
-                        cumulative_departures_by_organ[organ_out][row.DONOR_CITY].append(organ_out)
-                        new_arrival_cities.add(row.RECIPIENT_CITY)
 
         table_ax.clear()
         table_ax.axis('off')
         table_ax.set_title("Cumulative Organ Flow Summary", fontsize=12, weight='bold')
 
-        organ_types = sorted(set(cumulative_arrivals_by_organ.keys()) | set(cumulative_departures_by_organ.keys()))
-        for idx, organ in enumerate(organ_types):
-            arrivals = cumulative_arrivals_by_organ[organ]
-            departures = cumulative_departures_by_organ[organ]
-            cities = sorted(set(arrivals.keys()) | set(departures.keys()))
-            rows = []
-            cell_colors = []
+        organ_tables = precomputed_tables[frame]
+        for idx, (organ, data) in enumerate(organ_tables.items()):
+            rows = data["rows"]
+            highlights = data["highlights"]
+            cell_colors = [['#ccffcc' if row[0] in highlights else 'white'] * 3 for row in rows]
 
-            for city in cities:
-                arr_count = len(arrivals.get(city, []))
-                dep_count = len(departures.get(city, []))
-                rows.append([city, arr_count, dep_count])
-                if city in new_arrival_cities:
-                    cell_colors.append(['#ccffcc'] * 3)
-                else:
-                    cell_colors.append(['white'] * 3)
+            if organ not in organ_axes:
+                organ_axes[organ] = fig.add_subplot(gs[0, 1], position=[0.75, 0.68 - idx * 0.25, 0.23, 0.22])
 
-            sub_ax = fig.add_subplot(gs[0, 1], position=[0.75, 0.75 - idx * 0.25, 0.23, 0.22])
+                organ_axes[organ].axis('off')
+
+            sub_ax = organ_axes[organ]
+            sub_ax.clear()
             sub_ax.axis('off')
             sub_ax.set_title(f"{organ}", fontsize=10, weight='bold')
             table = sub_ax.table(
@@ -282,8 +295,6 @@ def animate_organ_flows(csv_path, shapefile_path):
             table.auto_set_font_size(False)
             table.set_fontsize(8)
             table.scale(1, 1.2)
-
-            # Make header bold
             for key, cell in table.get_celld().items():
                 if key[0] == 0:
                     cell.set_text_props(weight='bold')
@@ -304,6 +315,8 @@ def animate_organ_flows(csv_path, shapefile_path):
                 update(current_frame[0])
             else:
                 timer.stop()
+
+
 
     timer = fig.canvas.new_timer(interval=30)
     timer.add_callback(advance_frame)
