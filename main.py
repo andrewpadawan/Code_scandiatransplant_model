@@ -7,6 +7,7 @@ import os
 import pandas as pd 
 from matching.match_donor_patient import *
 import sys
+from visualizer.organ_flow_visualizer import animate_organ_flows
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
@@ -58,10 +59,15 @@ for t in timesteps_to_process:
     print(scandiatransplant.donor_list.df)
 
 
-    scandiatransplant= matching(scandiatransplant, "greedy", False)
+    scandiatransplant= matching(scandiatransplant,t, "greedy", False)
     print("After matching")
     print(scandiatransplant.donor_list.df)
 
 
 print(scandiatransplant.recipient_waitlist.df)
 print(scandiatransplant.donor_list.df)
+
+
+animate_organ_flows(csv_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs\matching_20251031_160204.csv", shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
+
+

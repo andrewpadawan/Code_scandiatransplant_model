@@ -1,10 +1,10 @@
 import pandas as pd
-from utils.logger import get_matching_logger, log_match
+from utils.logger import get_matching_logger, log_match, log_match_csv_dynamic
 
 logger = get_matching_logger()
 has_logged_matching = False
 
-def matching(scandiatransplant, heuristic="greedy", verbose=True, **kwargs):
+def matching(scandiatransplant, timestep, heuristic="greedy", verbose=True,  **kwargs):
     global has_logged_matching
 
     if not has_logged_matching:
@@ -16,7 +16,7 @@ def matching(scandiatransplant, heuristic="greedy", verbose=True, **kwargs):
         print(f"Running matching with heuristic: {heuristic}")
 
     if heuristic == "greedy":
-        scandiatransplant= _greedy_match(scandiatransplant, verbose=verbose, **kwargs)
+        scandiatransplant= _greedy_match(scandiatransplant,timestep, verbose=verbose, **kwargs)
     #elif heuristic == "priority":
         #_priority_match(scandiatransplant, verbose=verbose, **kwargs)
     else:
@@ -24,7 +24,7 @@ def matching(scandiatransplant, heuristic="greedy", verbose=True, **kwargs):
     
     return scandiatransplant
 
-def _greedy_match(scandiatransplant, verbose=True, **kwargs):
+def _greedy_match(scandiatransplant, timestep, verbose=True, **kwargs):
     if verbose:
         print("Using greedy matching")
     # Access scandiatransplant.recipient_waitlist, donor_list, etc.
@@ -67,7 +67,9 @@ def _greedy_match(scandiatransplant, verbose=True, **kwargs):
     
 
         log_match(logger, donor, recipient1_df)
+        log_match_csv_dynamic(timestep, donor, recipient1_df)
         log_match(logger, donor, recipient2_df)
+        log_match_csv_dynamic(timestep,donor, recipient2_df)
         #4) Remove donor and recipients from scandiatransplant
         scandiatransplant.remove_donor(donor["DONORNUMBER"].values[0])
         scandiatransplant.remove_recipient(recipient1_df["RECIPIENTNUMBER"].values[0])

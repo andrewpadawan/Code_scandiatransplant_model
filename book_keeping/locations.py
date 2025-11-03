@@ -17,17 +17,17 @@ city_country_map = {
 
 city_data = {
     #numbers from wikipedia
-    "Aarhus": {"country": "Denmark", "population": 373388},
-    "Copenhagen": {"country": "Denmark", "population": 1396508},
-    "Odense": {"country": "Denmark", "population": 185480},
+    "Aarhus": {"country": "Denmark", "population": 1968469},
+    "Copenhagen": {"country": "Denmark", "population": 2904705},
+    "Odense": {"country": "Denmark", "population": 1241223},
     "Skane": {"country": "Sweden", "population": 1418496},  # Region, not a city
     "Gothenburg": {"country": "Sweden", "population": 674529},
     "Stockholm": {"country": "Sweden", "population": 1617407},
     "Uppsala": {"country": "Sweden", "population": 177074},
-    "Oslo": {"country": "Norway", "population": 1588457},
-    "Reykjavik": {"country": "Iceland", "population": 249054},
-    "Helsinki": {"country": "Finland", "population": 1616656},
-    "Tartu": {"country": "Estonia", "population": 97759}
+    "Oslo": {"country": "Norway", "population": 5606944},
+    "Reykjavik": {"country": "Iceland", "population": 389444},
+    "Helsinki": {"country": "Finland", "population": 5650325},
+    "Tartu": {"country": "Estonia", "population": 1369995}
 }
 
 city_pop= {

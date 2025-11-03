@@ -1,6 +1,7 @@
 import logging
 import os
 from datetime import datetime
+import csv
 
 def get_matching_logger(name="matching_logger"):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -48,3 +49,31 @@ def log_match(logger, donor_df, recipient_df):
 def log_timestep(logger, timestep):
     header = f"\nTIMESTEP {timestep}\n" + "*" * 40
     logger.info(header)
+
+
+def log_match_csv_dynamic(timestep, donor_df, recipient_df):
+    donor = donor_df.iloc[0]
+    recipient = recipient_df.iloc[0]
+
+    # Prefix columns to avoid collisions
+    donor_cols = [f"DONOR_{col}" for col in donor_df.columns]
+    recipient_cols = [f"RECIPIENT_{col}" for col in recipient_df.columns]
+    all_headers = ["TIMESTEP"] + donor_cols + recipient_cols
+
+    # Prepare row data
+    row_data = [timestep] + list(donor.values) + list(recipient.values)
+
+    # Build log path
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    log_filename = f"matching_{timestamp}.csv"
+    log_path = os.path.join("csv_logs", log_filename)
+
+    os.makedirs(os.path.dirname(log_path), exist_ok=True)
+
+    # Write to CSV
+    file_exists = os.path.isfile(log_path)
+    with open(log_path, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        if not file_exists:
+            writer.writerow(all_headers)
+        writer.writerow(row_data)
