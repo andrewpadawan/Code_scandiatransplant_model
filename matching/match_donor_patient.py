@@ -16,13 +16,13 @@ def matching(scandiatransplant, timestep, heuristic="greedy", verbose=True,  **k
         print(f"Running matching with heuristic: {heuristic}")
 
     if heuristic == "greedy":
-        scandiatransplant= _greedy_match(scandiatransplant,timestep, verbose=verbose, **kwargs)
+        scandiatransplant, log_path= _greedy_match(scandiatransplant,timestep, verbose=verbose, **kwargs)
     #elif heuristic == "priority":
         #_priority_match(scandiatransplant, verbose=verbose, **kwargs)
     else:
         raise ValueError(f"Unknown heuristic: {heuristic}")
     
-    return scandiatransplant
+    return scandiatransplant, log_path
 
 def _greedy_match(scandiatransplant, timestep, verbose=True, **kwargs):
     if verbose:
@@ -44,14 +44,14 @@ def _greedy_match(scandiatransplant, timestep, verbose=True, **kwargs):
     else:
         if verbose:
             print("No donor was available at this timestep")
-        return scandiatransplant
+        return scandiatransplant, None
     
     if not scandiatransplant.recipient_waitlist.df.empty:
         recipient_df= scandiatransplant.recipient_waitlist.df.copy()
     else:
         if verbose:
             print("Recipient list was empty")
-        return scandiatransplant
+        return scandiatransplant, None
       
     #3) Print the match to a log file
     for donor in donor_df_list:
@@ -69,7 +69,7 @@ def _greedy_match(scandiatransplant, timestep, verbose=True, **kwargs):
         log_match(logger, donor, recipient1_df)
         log_match_csv_dynamic(timestep, donor, recipient1_df)
         log_match(logger, donor, recipient2_df)
-        log_match_csv_dynamic(timestep,donor, recipient2_df)
+        log_path= log_match_csv_dynamic(timestep,donor, recipient2_df)
         #4) Remove donor and recipients from scandiatransplant
         scandiatransplant.remove_donor(donor["DONORNUMBER"].values[0])
         scandiatransplant.remove_recipient(recipient1_df["RECIPIENTNUMBER"].values[0])
@@ -77,4 +77,4 @@ def _greedy_match(scandiatransplant, timestep, verbose=True, **kwargs):
 
 
 
-    return scandiatransplant
+    return scandiatransplant, log_path if 'log_path' in locals() else None

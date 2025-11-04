@@ -77,3 +77,5 @@ def log_match_csv_dynamic(timestep, donor_df, recipient_df):
         if not file_exists:
             writer.writerow(all_headers)
         writer.writerow(row_data)
+
+    return log_path

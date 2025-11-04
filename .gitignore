@@ -1,3 +1,5 @@
 logs/
 csv_logs/
 venv/
+summary_logs/
+graph_images/

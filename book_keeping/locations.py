@@ -43,3 +43,32 @@ city_pop= {
     "Helsinki": 1616656,
     "Tartu": 97759
 }
+
+# Static city coordinates (longitude, latitude)
+CITY_COORDS_LONG_LAT = {
+    "Aarhus": (56.1629, 10.2039),
+    "Copenhagen": (55.6761, 12.5683),
+    "Odense": (55.4038, 10.4024),
+    "Skane": (55.604981, 13.003822),
+    "Gothenburg": (57.7089, 11.9746),
+    "Stockholm": (59.3293, 18.0686),
+    "Uppsala": (59.8586, 17.6389),
+    "Oslo": (59.9139, 10.7522),
+    "Reykjavik": (64.1355, -21.8954),
+    "Helsinki": (60.1695, 24.9354),
+    "Tartu": (58.3776, 26.7290)
+}
+
+CITY_COORDS_LAT_LONG = {
+    "Aarhus": (10.2039, 56.1629),
+    "Copenhagen": (12.5683, 55.6761),
+    "Odense": (10.4024, 55.4038),
+    "Skane": (13.003822, 55.604981),
+    "Gothenburg": (11.9746, 57.7089),
+    "Stockholm": (18.0686, 59.3293),
+    "Uppsala": (17.6389, 59.8586),
+    "Oslo": (10.7522, 59.9139),
+    "Reykjavik": (-21.8954, 64.1355),
+    "Helsinki": (24.9354, 60.1695),
+    "Tartu": (26.7290, 58.3776)
+}

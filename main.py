@@ -8,6 +8,8 @@ import pandas as pd
 from matching.match_donor_patient import *
 import sys
 from visualizer.organ_flow_visualizer import animate_organ_flows
+from visualizer.summary import summarize_organ_flows
+from visualizer.graphs import plot_organ_flow_graph_on_map
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
@@ -32,6 +34,8 @@ all_timesteps = sorted(set(recipient_groups.groups.keys()) | set(donor_groups.gr
 
 timesteps_to_process = [t for t in all_timesteps if t > 0]
 
+match_file= None
+
 # Loop through timesteps starting from 1
 for t in timesteps_to_process:
     log_timestep(logger, t)
@@ -55,19 +59,23 @@ for t in timesteps_to_process:
         donor_row_df = pd.DataFrame([row])
         scandiatransplant.add_donor(donor_row_df)
 
-    print("Before matching")
-    print(scandiatransplant.donor_list.df)
+    #print("Before matching")
+    #print(scandiatransplant.donor_list.df)
 
 
-    scandiatransplant= matching(scandiatransplant,t, "greedy", False)
-    print("After matching")
-    print(scandiatransplant.donor_list.df)
+    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, "greedy", False)
+    if incoming_match_file is not None:
+        match_file= incoming_match_file
+    
+    #print("After matching")
+    #print(scandiatransplant.donor_list.df)
+    
+
+print(str(match_file))
+#print(scandiatransplant.recipient_waitlist.df)
+#print(scandiatransplant.donor_list.df)
 
 
-print(scandiatransplant.recipient_waitlist.df)
-print(scandiatransplant.donor_list.df)
-
-
-animate_organ_flows(csv_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs\matching_20251031_160204.csv", shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
-
-
+animate_organ_flows(csv_path=match_file, shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
+summarize_organ_flows(csv_path=match_file)
+plot_organ_flow_graph_on_map(csv_path=match_file)

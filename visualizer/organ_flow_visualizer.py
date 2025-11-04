@@ -13,7 +13,7 @@ from matplotlib.widgets import Button, Slider
 from matplotlib import colormaps
 import numpy as np
 from collections import defaultdict
-
+#from book_keeping.locations import CITY_COORDS_LONG_LAT
 
 # Static city coordinates
 CITY_COORDS = {
