@@ -23,11 +23,21 @@ class Scandiatransplant:
    #Aggregations for waiting lists 
 
     def aggregate_waitlist(self):
-        combined_df = pd.concat([country.waitlist.df for country in self.member_countries], ignore_index=True)
+        combined_df = pd.concat(
+            [country.waitlist.df for country in self.member_countries],
+            ignore_index=True
+        )
+        # Sort by RECIPIENTNUMBER
+        combined_df.sort_values("RECIPIENTNUMBER", inplace=True)
         self.recipient_waitlist.df = combined_df
 
     def aggregate_donorlist(self):
-        combined_df = pd.concat([country.donor_list.df for country in self.member_countries], ignore_index=True)
+        combined_df = pd.concat(
+        [country.donor_list.df for country in self.member_countries],
+        ignore_index=True
+        )
+        # Sort by DONORNUMBER
+        combined_df.sort_values("DONORNUMBER", inplace=True)
         self.donor_list.df = combined_df
 
     def aggregate_all_lists(self):
@@ -70,7 +80,7 @@ class Scandiatransplant:
         return removed
 
 
-    def remove_donor(self, donor_id, verbose=True):
+    def remove_donor(self, donor_id, verbose=False):
         removed = False
         scandiatransplant_df = self.donor_list.df
 

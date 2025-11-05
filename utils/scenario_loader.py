@@ -32,6 +32,9 @@ def load_local_waiting_list(data, hospitals):
     try:
         df_recipients = pd.read_csv(recipient_list)
         df_donors = pd.read_csv(donor_list)
+        # Optional: reset index to ensure it's clean and sequential
+        df_recipients.reset_index(drop=True, inplace=True)
+        df_donors.reset_index(drop=True, inplace=True)
   
         
     except FileNotFoundError:

@@ -6,7 +6,7 @@ import csv
 def get_matching_logger(name="matching_logger"):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     log_filename = f"matching_{timestamp}.log"
-    log_path = os.path.join("logs", log_filename)
+    log_path = os.path.join("logs/text_logs", log_filename)
 
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
@@ -51,7 +51,7 @@ def log_timestep(logger, timestep):
     logger.info(header)
 
 
-def log_match_csv_dynamic(timestep, donor_df, recipient_df):
+def log_match_csv_dynamic(timestep, donor_df, recipient_df, log_timestamp):
     donor = donor_df.iloc[0]
     recipient = recipient_df.iloc[0]
 
@@ -64,9 +64,9 @@ def log_match_csv_dynamic(timestep, donor_df, recipient_df):
     row_data = [timestep] + list(donor.values) + list(recipient.values)
 
     # Build log path
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    log_filename = f"matching_{timestamp}.csv"
-    log_path = os.path.join("csv_logs", log_filename)
+    timestamp = log_timestamp
+    log_filename = f"matching_{log_timestamp}.csv"
+    log_path = os.path.join("logs/csv_logs", log_filename)
 
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 

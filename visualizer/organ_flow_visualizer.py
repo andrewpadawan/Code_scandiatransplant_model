@@ -123,12 +123,7 @@ def create_city_geodataframe():
     return gpd.GeoDataFrame(df, geometry="geometry", crs="EPSG:4326")
 
 def animate_organ_flows(csv_path, shapefile_path):
-    import matplotlib.pyplot as plt
-    from matplotlib import gridspec
-    from matplotlib.widgets import Button, Slider
-    from matplotlib import colormaps
-    from collections import defaultdict
-    import pandas as pd
+    
 
     def normalize_organ(name):
         name = name.strip().lower()
@@ -188,10 +183,9 @@ def animate_organ_flows(csv_path, shapefile_path):
             if global_index not in seen_flows:
                 seen_flows.add(global_index)
                 row = meta.iloc[j]
-                organ_in = normalize_organ(row.RECIPIENT_ORGAN)
-                organ_out = normalize_organ(row.DONOR_GRAFT_TYPE)
-                cumulative_arrivals[organ_in][row.RECIPIENT_CITY] += 1
-                cumulative_departures[organ_out][row.DONOR_CITY] += 1
+                organ = normalize_organ(row.DONOR_GRAFT_TYPE)
+                cumulative_arrivals[organ][row.RECIPIENT_CITY] += 1
+                cumulative_departures[organ][row.DONOR_CITY] += 1
                 new_arrival_cities.add(row.RECIPIENT_CITY)
 
         organ_tables = {}
@@ -226,7 +220,7 @@ def animate_organ_flows(csv_path, shapefile_path):
     manual_gdf.plot(ax=ax, marker='^', facecolor='none', edgecolor='black', markersize=80)
     for _, row in manual_gdf.iterrows():
         name, x, y = row['NAME'], row.geometry.x, row.geometry.y
-        dx, dy = (0.1, -0.15) if name == 'Copenhagen' else (-0.2, 0.1) if name == 'Skane' else (0.1, 0.1)
+        dx, dy = (-0.2, 0.1) if name == 'Copenhagen' else (-0.5, -0.5) if name == 'Skane' else (-0.3, 0.1) if name == 'Odense' else (0.1, 0.1)
         ax.text(x + dx, y + dy, name, fontsize=9, ha='left', va='bottom')
 
     progress_bar, = progress_ax.plot([], [], color='green', lw=4)
@@ -276,7 +270,7 @@ def animate_organ_flows(csv_path, shapefile_path):
             cell_colors = [['#ccffcc' if row[0] in highlights else 'white'] * 3 for row in rows]
 
             if organ not in organ_axes:
-                organ_axes[organ] = fig.add_subplot(gs[0, 1], position=[0.75, 0.68 - idx * 0.25, 0.23, 0.22])
+                organ_axes[organ] = fig.add_axes([0.75, 0.3, 0.23, 0.6])
 
                 organ_axes[organ].axis('off')
 
@@ -329,8 +323,4 @@ def animate_organ_flows(csv_path, shapefile_path):
 
 
 
-if __name__ == "__main__":
-    animate_organ_flows(
-        csv_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs\matching_20251031_140724.csv",
-        shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp"
-    )
+

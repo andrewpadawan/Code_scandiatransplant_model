@@ -15,7 +15,7 @@ city_country_map = {
     "Tartu": "Estonia"
 }
 
-city_data = {
+"""city_data = {
     #numbers from wikipedia
     "Aarhus": {"country": "Denmark", "population": 1968469},
     "Copenhagen": {"country": "Denmark", "population": 2904705},
@@ -28,21 +28,22 @@ city_data = {
     "Reykjavik": {"country": "Iceland", "population": 389444},
     "Helsinki": {"country": "Finland", "population": 5650325},
     "Tartu": {"country": "Estonia", "population": 1369995}
-}
+}"""
 
+#used scandiatransplant info, estimated sweden's numbers
 city_pop= {
-    "Aarhus": 373388,
-    "Copenhagen": 1396508,
-    "Odense": 185480,
-    "Skane": 1418496,
-    "Gothenburg": 674529,
-    "Stockholm": 1617407,
-    "Uppsala": 177074,
-    "Oslo": 1588457,
-    "Reykjavik": 249054,
-    "Helsinki": 1616656,
-    "Tartu": 97759
-}
+    "Aarhus": 1968469,
+    "Copenhagen": 2904705,
+    "Odense": 1241223,
+    "Skane": 2000000,
+    "Gothenburg": 3900000,
+    "Stockholm": 2500000,
+    "Uppsala": 2200000,
+    "Oslo": 5606944,
+    "Reykjavik": 389444,
+    "Helsinki": 5650325,
+    "Tartu": 1369995
+} 
 
 # Static city coordinates (longitude, latitude)
 CITY_COORDS_LONG_LAT = {

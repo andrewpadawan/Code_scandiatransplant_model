@@ -1,6 +1,7 @@
 import random
 from book_keeping import locations
-
+import numpy as np
+from collections import Counter
 def generate_blood_types(abo_distribution, rh_distribution, total_samples):
 
     """
@@ -47,24 +48,24 @@ def generate_blood_types(abo_distribution, rh_distribution, total_samples):
 
 
 
-def generate_locations(total_samples):
+def generate_locations(total_samples, seed=None):
     # I assume that donor and recipient numbers are proportional to population
+    if seed is not None:
+        random.seed(seed)
+
     cities = list(locations.city_pop.keys())
     populations = list(locations.city_pop.values())
     total_pop = sum(populations)
     weights = [pop / total_pop for pop in populations]
 
-    city_list= []
-    country_list= []
+    generated_cities = random.choices(cities, weights=weights, k=total_samples)
+    random.shuffle(generated_cities)  # Shuffle to avoid clustering
 
-    for _ in range(total_samples):
-            generated_city= random.choices(cities, weights=weights, k=total_samples)[0]
-            city_list.append(generated_city)
-            country_list.append(locations.city_country_map.get(generated_city))
-    
+    city_list = generated_cities
+    country_list = [locations.city_country_map.get(city, "Unknown") for city in generated_cities]
+
     return city_list, country_list
 
-import numpy as np
 
 def generate_timesteps(total_samples, zero_fraction=0.6, min_timestep=1, max_timestep=365):
     # Calculate how many should have timestep 0
@@ -77,8 +78,9 @@ def generate_timesteps(total_samples, zero_fraction=0.6, min_timestep=1, max_tim
     remaining_count = total_samples - zero_count
     random_timesteps = np.random.randint(min_timestep, max_timestep + 1, size=remaining_count)
 
-    # Combine and shuffle
+    # Combine and order: I want the list to have an ascending timestep and id numbers, where the timesteps are random
     all_timesteps = fixed_timesteps + list(random_timesteps)
-    np.random.shuffle(all_timesteps)
+    all_timesteps.sort()  # Sort in ascending order
+    #np.random.shuffle(all_timesteps)
 
     return all_timesteps

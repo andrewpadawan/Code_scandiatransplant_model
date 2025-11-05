@@ -10,6 +10,7 @@ import sys
 from visualizer.organ_flow_visualizer import animate_organ_flows
 from visualizer.summary import summarize_organ_flows
 from visualizer.graphs import plot_organ_flow_graph_on_map
+from datetime import datetime
 
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
@@ -19,7 +20,7 @@ logger = get_matching_logger()
 
 # LOAD SCENARIOS
 scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\basic_scenario.json")
-print(scandiatransplant.donor_list.df)
+
 
 #for country in scandiatransplant.member_countries:
 #    country.print()
@@ -35,14 +36,15 @@ all_timesteps = sorted(set(recipient_groups.groups.keys()) | set(donor_groups.gr
 timesteps_to_process = [t for t in all_timesteps if t > 0]
 
 match_file= None
+log_timestamp= datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Loop through timesteps starting from 1
 for t in timesteps_to_process:
     log_timestep(logger, t)
-    print("TIMESTEP " + str(t)+ " ____________________________")
+    #print("TIMESTEP " + str(t)+ " ____________________________")
     recipients_at_t = recipient_groups.get_group(t) if t in recipient_groups.groups else pd.DataFrame()
     donors_at_t = donor_groups.get_group(t) if t in donor_groups.groups else pd.DataFrame()
-
+    
     #add to scandiatranplant waitlist
     # Skip empty timesteps
     if recipients_at_t.empty and donors_at_t.empty:
@@ -63,7 +65,7 @@ for t in timesteps_to_process:
     #print(scandiatransplant.donor_list.df)
 
 
-    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, "greedy", False)
+    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,"greedy", False)
     if incoming_match_file is not None:
         match_file= incoming_match_file
     

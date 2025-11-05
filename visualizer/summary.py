@@ -12,37 +12,36 @@ def normalize_organ(name):
         return 'Heart'
     return name.capitalize()
 
-def summarize_organ_flows(csv_path, output_dir="summary_logs"):
+def summarize_organ_flows(csv_path, output_dir="logs/summary_logs"):
     df = pd.read_csv(csv_path)
     df["ORGAN_TYPE"] = df["RECIPIENT_ORGAN"].apply(normalize_organ)
 
-    flow_summary = (
-        df.groupby(["DONOR_CITY", "RECIPIENT_CITY", "ORGAN_TYPE"])
-          .size()
-          .reset_index(name="NUM_TRANSFERS")
-          .sort_values("NUM_TRANSFERS", ascending=False)
-    )
-
-    flow_matrix = flow_summary.pivot_table(
-        index="DONOR_CITY",
-        columns="RECIPIENT_CITY",
-        values="NUM_TRANSFERS",
-        aggfunc="sum",
-        fill_value=0
-    )
-
+    # Count donations and receptions per city
     donor_counts = (
         df.groupby(["DONOR_CITY", "ORGAN_TYPE"])
           .size()
           .reset_index(name="NUM_DONATED")
-          .sort_values("NUM_DONATED", ascending=False)
+          .rename(columns={"DONOR_CITY": "CITY"})
     )
 
     recipient_counts = (
         df.groupby(["RECIPIENT_CITY", "ORGAN_TYPE"])
           .size()
           .reset_index(name="NUM_RECEIVED")
-          .sort_values("NUM_RECEIVED", ascending=False)
+          .rename(columns={"RECIPIENT_CITY": "CITY"})
+    )
+
+    # Merge donation and reception counts
+    merged = pd.merge(donor_counts, recipient_counts, on=["CITY", "ORGAN_TYPE"], how="outer")
+    merged["NUM_DONATED"] = merged["NUM_DONATED"].fillna(0).astype(int)
+    merged["NUM_RECEIVED"] = merged["NUM_RECEIVED"].fillna(0).astype(int)
+    merged["NET_FLOW"] = merged["NUM_RECEIVED"] - merged["NUM_DONATED"]
+
+    # Count total transfers between city pairs
+    city_pair_counts = (
+        df.groupby(["DONOR_CITY", "RECIPIENT_CITY", "ORGAN_TYPE"])
+          .size()
+          .reset_index(name="NUM_TRANSFERS")
     )
 
     # Extract timestamp tag from filename
@@ -52,31 +51,27 @@ def summarize_organ_flows(csv_path, output_dir="summary_logs"):
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
 
-    output_path = os.path.join(output_dir, f"summary_{tag}.csv")
-    flow_summary.to_csv(output_path, index=False)
+    # Save both tables
+    summary_path = os.path.join(output_dir, f"summary_{tag}.csv")
+    flow_path = os.path.join(output_dir, f"city_flows_{tag}.csv")
+
+    merged.to_csv(summary_path, index=False)
+    city_pair_counts.to_csv(flow_path, index=False)
 
     return {
-        "flow_summary": flow_summary,
-        "flow_matrix": flow_matrix,
-        "donor_counts": donor_counts,
-        "recipient_counts": recipient_counts,
-        "output_path": output_path
+        "summary_table": merged,
+        "city_flow_table": city_pair_counts,
+        "summary_path": summary_path,
+        "flow_path": flow_path
     }
+
 
 # Example usage
 if __name__ == "__main__":
-    summary = summarize_organ_flows(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs\matching_20251031_140724.csv")
+    summary = summarize_organ_flows(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs\matching_20251105_113859.csv")
     
 
-    # Access individual summaries
-    print("\nOrgan Flow Summary:")
-    print(summary["flow_summary"].head())
-
-    print("\nDonor Counts:")
-    print(summary["donor_counts"].head())
-
-    print("\nRecipient Counts:")
-    print(summary["recipient_counts"].head())
+    print(summary)
 
     # Optional: export to CSV
     

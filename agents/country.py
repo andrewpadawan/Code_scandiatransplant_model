@@ -18,13 +18,21 @@ class Country:
         
         print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
     def aggregate_waitlist(self):
-        combined_df = pd.concat([hos.recipient_waiting_list.df for hos in self.member_hospitals], ignore_index=True)
+        
+        combined_df = pd.concat(
+        [hos.recipient_waiting_list.df for hos in self.member_hospitals],
+            ignore_index=True
+        )
+        combined_df.sort_values("RECIPIENTNUMBER", inplace=True)
         self.waitlist = CountryWaitList(combined_df)
 
     def aggregate_donorlist(self):
-        combined_df = pd.concat([hos.donor_list.df for hos in self.member_hospitals], ignore_index=True)
+        combined_df = pd.concat(
+        [hos.donor_list.df for hos in self.member_hospitals],
+            ignore_index=True
+        )
+        combined_df.sort_values("DONORNUMBER", inplace=True)
         self.donor_list = CountryWaitList(combined_df)
-
     def aggregate_all_lists(self):
         self.aggregate_waitlist()
         self.aggregate_donorlist()

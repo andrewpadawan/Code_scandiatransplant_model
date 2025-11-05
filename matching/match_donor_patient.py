@@ -4,7 +4,7 @@ from utils.logger import get_matching_logger, log_match, log_match_csv_dynamic
 logger = get_matching_logger()
 has_logged_matching = False
 
-def matching(scandiatransplant, timestep, heuristic="greedy", verbose=True,  **kwargs):
+def matching(scandiatransplant, timestep,log_timestamp, heuristic="greedy", verbose=True,  **kwargs):
     global has_logged_matching
 
     if not has_logged_matching:
@@ -16,7 +16,7 @@ def matching(scandiatransplant, timestep, heuristic="greedy", verbose=True,  **k
         print(f"Running matching with heuristic: {heuristic}")
 
     if heuristic == "greedy":
-        scandiatransplant, log_path= _greedy_match(scandiatransplant,timestep, verbose=verbose, **kwargs)
+        scandiatransplant, log_path= _greedy_match(scandiatransplant,timestep, log_timestamp, verbose=verbose, **kwargs)
     #elif heuristic == "priority":
         #_priority_match(scandiatransplant, verbose=verbose, **kwargs)
     else:
@@ -24,7 +24,7 @@ def matching(scandiatransplant, timestep, heuristic="greedy", verbose=True,  **k
     
     return scandiatransplant, log_path
 
-def _greedy_match(scandiatransplant, timestep, verbose=True, **kwargs):
+def _greedy_match(scandiatransplant, timestep, log_timestamp, verbose=True, **kwargs):
     if verbose:
         print("Using greedy matching")
     # Access scandiatransplant.recipient_waitlist, donor_list, etc.
@@ -67,9 +67,9 @@ def _greedy_match(scandiatransplant, timestep, verbose=True, **kwargs):
     
 
         log_match(logger, donor, recipient1_df)
-        log_match_csv_dynamic(timestep, donor, recipient1_df)
+        log_match_csv_dynamic(timestep, donor, recipient1_df, log_timestamp)
         log_match(logger, donor, recipient2_df)
-        log_path= log_match_csv_dynamic(timestep,donor, recipient2_df)
+        log_path= log_match_csv_dynamic(timestep,donor, recipient2_df, log_timestamp)
         #4) Remove donor and recipients from scandiatransplant
         scandiatransplant.remove_donor(donor["DONORNUMBER"].values[0])
         scandiatransplant.remove_recipient(recipient1_df["RECIPIENTNUMBER"].values[0])
