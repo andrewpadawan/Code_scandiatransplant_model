@@ -117,7 +117,7 @@ def plot_organ_flow_graph_on_map(csv_path, output_dir="logs/graph_images", shape
             )
 
     norm = colors.Normalize(vmin=min(weights), vmax=max(weights))
-    cmap = plt.cm.plasma  # ✅ lowercase fix
+    cmap = plt.cm.viridis  # ✅ lowercase fix
     sm = cm.ScalarMappable(norm=norm, cmap=cmap)
     sm.set_array([])
     cbar = plt.colorbar(sm, ax=ax, fraction=0.03, pad=0.04)
