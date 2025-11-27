@@ -1,10 +1,20 @@
 import pandas as pd
 from utils.logger import get_matching_logger, log_match, log_match_csv_dynamic
+from agents.organs import *
+from typing import List
+from agents.hospital import *
+#ABO compatibility, key is the donor, values the recipients
+abo_compatibility = {
+    "O": ["O", "A", "B", "AB"],
+    "A": ["A", "AB"],
+    "B": ["B", "AB"],
+    "AB": ["AB"]
+}
 
 logger = get_matching_logger()
 has_logged_matching = False
 
-def matching(scandiatransplant, timestep,log_timestamp, heuristic="greedy", verbose=True,  **kwargs):
+def matching(scandiatransplant, timestep,log_timestamp,organs_at_t, heuristic="greedy", verbose=True,  **kwargs):
     global has_logged_matching
 
     if not has_logged_matching:
@@ -17,8 +27,8 @@ def matching(scandiatransplant, timestep,log_timestamp, heuristic="greedy", verb
 
     if heuristic == "greedy":
         scandiatransplant, log_path= _greedy_match(scandiatransplant,timestep, log_timestamp, verbose=verbose, **kwargs)
-    #elif heuristic == "priority":
-        #_priority_match(scandiatransplant, verbose=verbose, **kwargs)
+    elif heuristic == "abo_Rh_match":
+        scandiatransplant, log_path=_abo_Rh_match(scandiatransplant,timestep, log_timestamp,organs_at_t, verbose=verbose, **kwargs)
     else:
         raise ValueError(f"Unknown heuristic: {heuristic}")
     
@@ -78,3 +88,131 @@ def _greedy_match(scandiatransplant, timestep, log_timestamp, verbose=True, **kw
 
 
     return scandiatransplant, log_path if 'log_path' in locals() else None
+
+
+def _abo_Rh_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):
+    #Very simple allocation policy:
+    #1) If it matches (abo identical), check if payback, then sorted by time on waiting list
+    #2) Abo compatible, check if payback, then sorted by time on waiting list
+    #simple way of packback, just a counter
+    
+    if verbose:
+        print("Using abo_Rh_match matching")
+    
+    donor_df_list= []
+    recipient_df = None
+    
+
+    if scandiatransplant.donor_list.df.empty:
+        #donor_df_list= [scandiatransplant.donor_list.df.iloc[[i]] for i in range(len(scandiatransplant.donor_list.df))]
+        #donor_df= scandiatransplant.donor_list.df
+        #first_donor=  scandiatransplant.donor_list.df.head(1)
+        if verbose:
+            print("No donor was available at this timestep")
+        return scandiatransplant, None
+    
+    
+    if not scandiatransplant.recipient_waitlist.df.empty:
+        recipient_df= scandiatransplant.recipient_waitlist.df.copy()
+    else:
+        if verbose:
+            print("Recipient list was empty")
+        return scandiatransplant, None
+      
+    #3) Make and print the match to a log file
+    for organ in organs_at_t:
+        if not organ.exchange_obligation:
+            continue
+        if len(recipient_df) == 0:
+            print("Not enough recipients left to match this organ.")
+            break
+        #make the match based on ABO Rh compatibility
+        
+        abo_identical_df= rank_abo_identical(organ,recipient_df )
+        abo_compatible_df= rank_abo_compatible(organ,recipient_df )
+        if not abo_identical_df.empty:
+            recipient= abo_identical_df.iloc[[0]]
+        elif not abo_compatible_df.empty:
+            recipient= abo_compatible_df.iloc[[0]]
+        else:
+            print("No match was found for this organ")
+            continue
+                  
+    #log the matches
+        log_match(logger, organ, recipient)
+        log_path= log_match_csv_dynamic(timestep,organ, organ.donor_row, recipient, log_timestamp)
+        #4) Remove donor and recipients from scandiatransplant
+        scandiatransplant.remove_donor(organ.donor_id)
+        scandiatransplant.remove_recipient(recipient["RECIPIENTNUMBER"].values[0])
+        #log paybacks
+        log_payback(recipient, organ)
+
+
+    return scandiatransplant, log_path if 'log_path' in locals() else None
+
+
+
+
+
+
+# Helping functions
+def rank_abo_identical(organ:Organ, recipient_df):
+    filtered_df = recipient_df[recipient_df["AB0_BLOOD_GROUP"] == organ.abo_blood]
+    owed_cities= check_payback(organ)
+    if owed_cities:
+        filtered_df = filtered_df[filtered_df["CITY"].isin(owed_cities)]
+
+    ranked_identical = filtered_df.sort_values(by="RECIPIENTNUMBER")
+
+    if not ranked_identical.empty:
+        return ranked_identical
+    #return only the best match (?)
+    return pd.DataFrame()
+
+def rank_abo_compatible(organ, recipient_df):
+    organ_abo= organ.abo_blood
+    owed_cities= check_payback(organ)
+    compatible_types = abo_compatibility.get(organ_abo, [])
+    compatible_recipients = recipient_df[
+        recipient_df["AB0_BLOOD_GROUP"].isin(compatible_types)
+            ]
+
+    if owed_cities:
+        compatible_recipients = compatible_recipients[compatible_recipients["CITY"].isin(owed_cities)]
+
+    ranked_compatible= compatible_recipients.sort_values(by="RECIPIENTNUMBER")
+    if not ranked_compatible.empty:
+        return ranked_compatible
+    return pd.DataFrame()
+
+
+def check_payback(organ:Organ):
+    #Simpliefied, its not checking that the organ is of the same quality
+    hospital_city= organ.city
+    organ_type = organ.type
+    hospital = next(
+            (h for h in Hospital.registry if h.city == hospital_city),
+            None
+        )
+    
+    try:
+        payback_row = hospital.organ_exchange_table.loc[organ_type]
+    except KeyError:
+        return {}
+
+    # Filter cities where this hospital owes organs (positive values)
+    owed_cities = [city for city, count in payback_row.items() if count > 0]
+    return owed_cities
+
+def log_payback(recipient_df, organ):
+    recipient_series = recipient_df.iloc[0]
+    recipient_hos = next(
+            (h for h in Hospital.registry if h.city == recipient_series["CITY"]),
+            None
+        )
+    donating_hos= next(
+        (h for h in Hospital.registry if h.city == organ.city),
+        None
+    )
+    recipient_hos.organ_exchange_table.loc[organ.type, organ.city] += 1
+    donating_hos.organ_exchange_table.loc[organ.type, recipient_series["CITY"]] -= 1

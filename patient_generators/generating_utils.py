@@ -2,21 +2,21 @@ import random
 from book_keeping import locations
 import numpy as np
 from collections import Counter
+from patient_generators.generating_constants import incidence_recipients, age_groups_recipients, age_groups_donors, incidence_donors, hla_frequencies, hla_to_serologic
+import copy
+from scipy.stats import truncnorm
+from scipy.stats import beta
+from scipy.optimize import minimize
+import pandas as pd
+
 def generate_blood_types(abo_distribution, rh_distribution, total_samples):
 
     """
-    Generates a list of blood types based on ABO and Rh distributions.
+    
 
     Based on the values of Denmark from https://en.wikipedia.org/wiki/Blood_type_distribution_by_country 
     And Rh infor from https://givblod.dk/fakta-om-blod/blodtyperne/
 
-    Parameters:
-    - abo_distribution: dict with ABO types and their percentages (e.g., {'A': 40, 'O': 40, 'B': 15, 'AB': 5})
-    - rh_distribution: dict with Rh types and their percentages (e.g., {'+': 85, '-': 15})
-    - total_samples: number of blood type samples to generate
-
-    Returns:
-    - List of blood types like ['A+', 'O-', 'B+', ...]
     """
 
     # Normalize distributions
@@ -84,3 +84,202 @@ def generate_timesteps(total_samples, zero_fraction=0.6, min_timestep=1, max_tim
     #np.random.shuffle(all_timesteps)
 
     return all_timesteps
+
+def generate_recipient_ages(total_samples, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+
+    # Normalize incidence to get probabilities
+    incidences = np.array(incidence_recipients)
+    probs = incidences / incidences.sum()
+
+    # Sample age group indices
+    group_indices = np.random.choice(len(age_groups_recipients), size=total_samples, p=probs)
+
+    # Sample age within each selected group
+    sampled_ages = np.array([
+        np.random.randint(*age_groups_recipients[i]) + 1  # safer unpacking
+        for i in group_indices
+    ])
+    np.random.shuffle(sampled_ages)
+
+    return sampled_ages
+
+def generate_donor_ages(total_samples, seed=None):
+    if seed is not None:
+        np.random.seed(seed)
+
+    # Normalize incidence to get probabilities
+    incidences = np.array(incidence_donors)
+
+    # Sample age group indices
+    group_indices = np.random.choice(len(age_groups_donors), size=total_samples, p=incidences)
+
+    # Sample age within each selected group
+    sampled_ages = np.array([
+        np.random.randint(*age_groups_donors[i]) + 1  # safer unpacking
+        for i in group_indices
+    ])
+    np.random.shuffle(sampled_ages)
+
+    return sampled_ages
+
+def generate_hla_genotypes(total_samples):
+    
+    genotypes = {locus: [] for locus in hla_frequencies.keys()}
+    serology  = {locus: [] for locus in hla_frequencies.keys()}
+    
+    for _ in range(total_samples):
+        for locus, alleles in hla_frequencies.items():
+            names, weights = zip(*alleles)
+            sampled = random.choices(names, weights=weights, k=2)
+            np.random.shuffle(sampled)
+            genotypes[locus].append(list(sampled))
+            
+            # Translate to serology
+            translated = []
+            for allele in sampled:
+                sero = hla_to_serologic.get(locus, {}).get(allele)
+                if sero:
+                    translated.append(sero)
+                else:
+                    translated.append(f"Unknown({allele})")
+            serology[locus].append(translated)
+    
+    return genotypes, serology
+
+def generate_recipient_antibodies(HS_no_yes_list, hla_serology):
+    all_patient_antibodies= []
+    all_patient_cPRA= []
+    #get all the antigens in a list to get ready to sample
+    sero_to_gene= build_serologic_to_genetic(hla_to_serologic)
+    all_serologic = []
+    for locus, allele_map in hla_to_serologic.items():
+        all_serologic.extend(allele_map.values())
+
+    for patient_index, item in enumerate(HS_no_yes_list):
+        patient_serology = get_patient_serology_list(hla_serology, patient_index)[0]
+        my_all_serologic= [antigen for antigen in all_serologic if antigen not in patient_serology]
+        my_allele_freq= 0
+        my_antigen_list = []
+        if item:
+            cpra= generate_cpra_value_HS()
+        else:
+            cpra= generate_cpra_value_NH()
+        
+        #print("My cPRA" + str(cpra))
+        
+        while True:
+            #I sample a random antigen from the dictionary, get the gene, get the allele freq
+            sample= random.choice(my_all_serologic)
+            genes = sero_to_gene.get(sample, [])
+            if not genes:
+                continue  # skip if no mapping found
+            gene = random.choice(genes)
+            gene_freq= check_gene_frequency(gene)
+            if my_allele_freq + gene_freq > cpra + 0.001: #I'm giving a bit of leeway sop +0.001, but otherwise resample
+                continue
+            else:
+                my_allele_freq= my_allele_freq + gene_freq
+                my_antigen_list.append(gene)
+
+            if my_allele_freq > cpra - 0.001: #also a bit of rounding for ease
+                break
+
+        all_patient_antibodies.append(my_antigen_list)
+        all_patient_cPRA.append(round(my_allele_freq, 3))
+        #print("my freq" + str(my_allele_freq))
+
+    return all_patient_antibodies, all_patient_cPRA
+
+
+
+def check_gene_frequency(gene):
+    
+    locus = gene.split("*")[0] if "*" in gene else None
+
+    # Check frequency for this gene in hla_frequencies
+    if locus and locus in hla_frequencies:
+        for allele, freq in hla_frequencies[locus]:
+            if allele == gene:
+               return freq
+    return 0.0
+
+def get_patient_serology_list(serology, patient_index):
+    patient_values = []
+    for locus in serology.keys():
+        patient_values.extend(serology[locus][patient_index])
+    return patient_values
+
+def generate_cpra_value_HS():
+    #alpha, beta_params = fit_beta(86, 96.5, 100)
+    #Literature values
+    median= 96.5
+    q1=86
+    q3= 100
+    lower_bound= 80
+    upper_bound= 100
+    #Use a normal distribution to generate random values, enforce bounds. Samples until valid sample is returned
+    std = (q3 - q1) / 1.35
+    a, b = (lower_bound - median) / std, (upper_bound - median) / std
+    sample = truncnorm.rvs(a, b, loc=median, scale=std)
+    return sample/ 100
+
+
+def generate_cpra_value_NH():
+   #Literature values
+    median= 3
+    q1=0
+    q3= 8
+    lower_bound= 0
+    upper_bound= 80
+    #Use a normal distribution to generate random values, enforce bounds. Samples until valid sample is returned
+    std = (q3 - q1) / 1.35 #approximated assuming normal dist
+    a, b = (lower_bound - median) / std, (upper_bound - median) / std
+    sample = truncnorm.rvs(a, b, loc=median, scale=std)
+    return sample/ 100
+
+def choose_HS_patients(total_samples):
+    #probability HS is 14%
+    return [random.random() < 0.14 for _ in range(total_samples)]
+
+
+def build_serologic_to_genetic(hla_to_serologic):
+    """
+    Invert the mapping so you can check what allele(s) correspond
+    to each serologic shorthand.
+    """
+    serologic_to_genetic = {}
+    
+    for locus, allele_map in hla_to_serologic.items():
+        for genetic, sero in allele_map.items():
+            # Initialize if not seen before
+            if sero not in serologic_to_genetic:
+                serologic_to_genetic[sero] = []
+            serologic_to_genetic[sero].append(genetic)
+    
+    return serologic_to_genetic
+
+
+def check_if_acceptable_mismatch(donor_row: pd.Series, recipient: dict) -> bool:
+    #acceptable mismatch if the recipient doenst have antibodies against the donor antigens
+    # Define the relevant donor HLA columns
+    hla_columns = [
+        "Serologic_HLA-A",
+        "Serologic_HLA-B",
+        "Serologic_HLA-C",
+        "Serologic_HLA-DRB1",
+        "Serologic_HLA-DQA1",
+        "Serologic_HLA-DQB1",
+        "Serologic_HLA-DPA1",
+        "Serologic_HLA-DPB1"
+    ]
+    
+    # Extract donor antigens into a list
+    donor_antigens = [donor_row.get(col, None) for col in hla_columns if donor_row.get(col, None) is not None]
+    
+    # Get recipient antibodies list
+    recipient_antibodies = recipient.get("HLA_antibodies", [])
+    
+    # Check compatibility: return True if no overlap
+    return not any(antigen in recipient_antibodies for antigen in donor_antigens)

@@ -5,6 +5,7 @@ from agents.waiting_lists import *
 from agents.scandiatransplant import *
 from agents.country import *
 from book_keeping import locations
+from agents.organs import *
 
 def load_scenario(filepath):
     with open(filepath, 'r') as f:
@@ -12,13 +13,13 @@ def load_scenario(filepath):
 
     hospitals = [Hospital(entry["city"]) for entry in data["hospital"]]
 
-    scandiatransplant,  df_ALL_recipients, df_ALL_donors= load_local_waiting_list(data, hospitals)
+    scandiatransplant,  df_ALL_recipients, df_ALL_donors, organ_list= load_local_waiting_list(data, hospitals)
     for country in scandiatransplant.member_countries:
         country.aggregate_all_lists()
     scandiatransplant.aggregate_all_lists()
 
 
-    return scandiatransplant, hospitals,  df_ALL_recipients, df_ALL_donors
+    return scandiatransplant, hospitals,  df_ALL_recipients, df_ALL_donors, organ_list
 
 def load_local_waiting_list(data, hospitals):
     #filepath for the recipient list
@@ -69,7 +70,9 @@ def load_local_waiting_list(data, hospitals):
     countries = list(country_map.values())
     scandiatransplant = Scandiatransplant(countries=countries)
 
-    return scandiatransplant, df_recipients, df_donors
+    organ_list= load_organs(df_donors)
+
+    return scandiatransplant, df_recipients, df_donors, organ_list
     
     """  scandiatransplant= Scandiatransplant(hospitals, ScandiatransplantWaitList(pd.read_csv(recipient_list)))
 
@@ -82,7 +85,23 @@ def load_local_waiting_list(data, hospitals):
          """
         # Step 3: Group hospitals by country and create Country objects
 
-
+def load_organs(df_donors):
+    organ_list= []
+    for _, donor in df_donors.iterrows():
+        if donor["GRAFT_TYPE"]=="KD":
+            donor_id = donor.get("DONORNUMBER")
+            if pd.isna(donor_id):
+                continue
+            organ_share_id= donor_id + "_RK"
+            organ_keep_id= donor_id+ "_LK"
+            organ_share = Organ(True,organ_share_id, donor)
+            organ_keep= Organ(False,organ_keep_id, donor)
+            organ_list.append(organ_share)
+            organ_list.append(organ_keep)
+        #elif otherorganshere
+        else:
+            continue
+    return organ_list
 
 
 

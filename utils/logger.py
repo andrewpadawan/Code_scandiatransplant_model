@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 import csv
+from agents.organs import *
 
 def get_matching_logger(name="matching_logger"):
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
@@ -22,13 +23,14 @@ def get_matching_logger(name="matching_logger"):
     return logger
 
 
-def log_match(logger, donor_df, recipient_df):
-    donor_id = donor_df["DONORNUMBER"].values[0]
-    donor_city = donor_df["CITY"].values[0]
-    donor_country = donor_df["COUNTRY"].values[0]
-    donor_blood = donor_df["AB0_BLOOD_GROUP"].values[0]
-    donor_rhesus= donor_df["RHESUS_CODE"].values[0]
-    donor_entry= donor_df["TIMESTEP_ENTERED"].values[0]
+def log_match(logger, organ: Organ, recipient_df):
+    donor_id = organ.donor_id
+    organ_city = organ.city
+    organ_country = organ.country
+    organ_blood= organ.abo_blood
+    organ_rhesus= organ.rhesus
+    organ_entry= organ.timestep
+    organ_type= organ.type
 
     recipient_id = recipient_df["RECIPIENTNUMBER"].values[0]
     recipient_city = recipient_df["CITY"].values[0]
@@ -39,7 +41,7 @@ def log_match(logger, donor_df, recipient_df):
 
     match_log = (
        
-        f"Donor {donor_id} (City: {donor_city}, Country: {donor_country}, Blood: {donor_blood}), Rhesus: {donor_rhesus}, Entered timestep: {donor_entry} \n"
+        f"Organ {organ_type} (City: {organ_city}, Country: {organ_country}, Blood: {organ_blood}), Rhesus: {organ_rhesus}, Entered timestep: {organ_entry} from Donor {donor_id} \n"
         f"matched with Recipient {recipient_id} (City: {recipient_city}, Country: {recipient_country},  Blood: {recipient_blood}), Rhesus: {recipient_rhesus}, Entered timestep: {recipient_entry}"
     )
 
@@ -51,23 +53,27 @@ def log_timestep(logger, timestep):
     logger.info(header)
 
 
-def log_match_csv_dynamic(timestep, donor_df, recipient_df, log_timestamp):
-    donor = donor_df.iloc[0]
-    recipient = recipient_df.iloc[0]
+def log_match_csv_dynamic(timestep, organ, donor_row, recipient_df, log_timestamp):
+    # Convert donor_row (Series) to single-row DataFrame
+    donor_df = donor_row.to_frame().T
 
     # Prefix columns to avoid collisions
     donor_cols = [f"DONOR_{col}" for col in donor_df.columns]
     recipient_cols = [f"RECIPIENT_{col}" for col in recipient_df.columns]
-    all_headers = ["TIMESTEP"] + donor_cols + recipient_cols
+
+    # Add organ-specific columns
+    organ_cols = ["ORGAN_ID", "ORGAN_TYPE", "EXCHANGE_OBLIGATION"]
+    all_headers = ["TIMESTEP"] + organ_cols + donor_cols + recipient_cols
 
     # Prepare row data
-    row_data = [timestep] + list(donor.values) + list(recipient.values)
+    organ_data = [organ.organ_id, organ.type, organ.exchange_obligation]
+    donor_values = list(donor_df.iloc[0].values)
+    recipient_values = list(recipient_df.iloc[0].values)
+    row_data = [timestep] + organ_data + donor_values + recipient_values
 
     # Build log path
-    timestamp = log_timestamp
     log_filename = f"matching_{log_timestamp}.csv"
     log_path = os.path.join("logs/csv_logs", log_filename)
-
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
 
     # Write to CSV
