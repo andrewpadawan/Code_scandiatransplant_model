@@ -13,14 +13,15 @@ from visualizer.graphs import plot_organ_flow_graph_on_map
 from datetime import datetime
 from collections import defaultdict
 from agents.hospital import *
-
-
+from visualizer.heatmap import *
+from utils.aux_functions import *
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 
 logger = get_matching_logger()
 #donor_generator.generate_donor(10, 1, 10)
 #recipient_generator.generate_recipient(40, 1, 10)
 
+print("Initialize matching module")
 # LOAD SCENARIOS
 scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\intermediate_scenario.json")
 
@@ -47,6 +48,7 @@ log_timestamp= datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Loop through timesteps starting from 1
 for t in timesteps_to_process:
+    print("In timestep:" + str(t))
     log_timestep(logger, t)
     #print("TIMESTEP " + str(t)+ " ____________________________")
     recipients_at_t = recipient_groups.get_group(t) if t in recipient_groups.groups else pd.DataFrame()
@@ -73,7 +75,7 @@ for t in timesteps_to_process:
     #print(scandiatransplant.donor_list.df)
 
 
-    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,"abo_Rh_match", False)
+    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,"abo_HLA_match", False)
     
     """print("Timestep" + str(t))
     for hospital in Hospital.registry:
@@ -94,5 +96,13 @@ print(str(match_file))
 
 
 #animate_organ_flows(csv_path=match_file, shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
-summarize_organ_flows(csv_path=match_file)
+
 #plot_organ_flow_graph_on_map(csv_path=match_file)
+
+
+
+
+summarize_organ_flows(csv_path=match_file)
+summary_file= get_summary_file(match_file)
+print(summary_file)
+plot_transfer_heatmap(summary_file)

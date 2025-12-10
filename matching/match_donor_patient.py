@@ -27,8 +27,8 @@ def matching(scandiatransplant, timestep,log_timestamp,organs_at_t, heuristic="g
 
     if heuristic == "greedy":
         scandiatransplant, log_path= _greedy_match(scandiatransplant,timestep, log_timestamp, verbose=verbose, **kwargs)
-    elif heuristic == "abo_Rh_match":
-        scandiatransplant, log_path=_abo_Rh_match(scandiatransplant,timestep, log_timestamp,organs_at_t, verbose=verbose, **kwargs)
+    elif heuristic == "abo_HLA_match":
+        scandiatransplant, log_path=_abo_HLA_match(scandiatransplant,timestep, log_timestamp,organs_at_t, verbose=verbose, **kwargs)
     else:
         raise ValueError(f"Unknown heuristic: {heuristic}")
     
@@ -90,7 +90,7 @@ def _greedy_match(scandiatransplant, timestep, log_timestamp, verbose=True, **kw
     return scandiatransplant, log_path if 'log_path' in locals() else None
 
 
-def _abo_Rh_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):
+def _abo_HLA_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):
     #Very simple allocation policy:
     #1) If it matches (abo identical), check if payback, then sorted by time on waiting list
     #2) Abo compatible, check if payback, then sorted by time on waiting list
@@ -128,15 +128,20 @@ def _abo_Rh_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[O
             break
         #make the match based on ABO Rh compatibility
         
-        abo_identical_df= rank_abo_identical(organ,recipient_df )
-        abo_compatible_df= rank_abo_compatible(organ,recipient_df )
+        HLA_compatible_recipient_df= filter_HLA_compatible(organ, recipient_df)
+        abo_identical_df = rank_abo_identical(organ, HLA_compatible_recipient_df)
+
         if not abo_identical_df.empty:
-            recipient= abo_identical_df.iloc[[0]]
-        elif not abo_compatible_df.empty:
-            recipient= abo_compatible_df.iloc[[0]]
+            recipient = abo_identical_df.iloc[[0]]
         else:
-            print("No match was found for this organ")
-            continue
+            abo_compatible_df = rank_abo_compatible(organ, HLA_compatible_recipient_df)
+            
+            if not abo_compatible_df.empty:
+                recipient = abo_compatible_df.iloc[[0]]
+            else:
+                print("No match was found for this organ")
+                continue
+
                   
     #log the matches
         log_match(logger, organ, recipient)
@@ -152,8 +157,28 @@ def _abo_Rh_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[O
 
 
 
+def filter_HLA_compatible(organ:Organ, recipient_df):
+    donor_alleles = [
+        organ.geno_HLA_A,
+        organ.geno_HLA_B,
+        organ.geno_HLA_C,
+        organ.geno_HLA_DRB1,
+        organ.geno_HLA_DQA1,
+        organ.geno_HLA_DQB1,
+        organ.geno_HLA_DPA1,
+        organ.geno_HLA_DPB1,
+    ]
 
+    # Filter recipients: compatible if none of the donor alleles are in their antibody list
+    compatible_df = recipient_df[
+        ~recipient_df["HLA_antibodies"].apply(
+            lambda ab_list: any(allele in ab_list for allele in donor_alleles)
+        )
+    ]
+    
+    return compatible_df
 
+   
 
 # Helping functions
 def rank_abo_identical(organ:Organ, recipient_df):

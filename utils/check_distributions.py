@@ -200,3 +200,99 @@ def summarize_cpra_by_status(csv_file):
     print(pd.DataFrame(results))
     return pd.DataFrame(results)
 
+
+def summarize_by_cPRA(filepath, column="cPRA"):
+    """
+    Read a CSV file, extract the cPRA column (values between 0 and 1),
+    and summarize distribution into clinically relevant intervals:
+      - 0
+      - 0.01–0.20
+      - 0.21–0.79
+      - 0.80–0.97
+      - 0.98–1.00
+    
+    Parameters
+    ----------
+    filepath : str
+        Path to the CSV file.
+    column : str, default "cPRA"
+        Name of the column containing cPRA values (between 0 and 1).
+    
+    Returns
+    -------
+    summary : dict
+        Dictionary with % of patients in each interval.
+    """
+    # Read CSV
+    df = pd.read_csv(filepath)
+    
+    # Extract cPRA column
+    values = df[column].dropna()
+    total = len(values)
+    
+    summary = {
+        "0": (values == 0).sum() / total * 100,
+        "0.01–0.20": ((values >= 0.01) & (values <= 0.20)).sum() / total * 100,
+        "0.21–0.79": ((values >= 0.21) & (values <= 0.79)).sum() / total * 100,
+        "0.80–0.97": ((values >= 0.80) & (values <= 0.97)).sum() / total * 100,
+        "0.98–1.00": ((values >= 0.98) & (values <= 1.00)).sum() / total * 100,
+    }
+    
+    return summary
+
+
+
+def plot_cPRA_histogram_percent_from_csv(
+    csv_path,
+    column="cPRA",
+    bins=50,
+    title="cPRA values generated for 10000 samples"
+):
+    """
+    Read cPRA values (0–1) from a CSV file and plot histogram as % of patients.
+    Converts values to percent (0–100).
+    """
+    # Load CSV
+    df = pd.read_csv(csv_path)
+
+    if column not in df.columns:
+        raise ValueError(f"Column '{column}' not found in {csv_path}")
+
+    # Extract cPRA values and convert to percent
+    samples = df[column].dropna().values
+    vals_pct = samples * 100.0
+
+    # Histogram as % of patients
+    counts, bin_edges, patches = plt.hist(
+        vals_pct,
+        bins=bins,
+        weights=np.ones_like(vals_pct) / len(vals_pct) * 100.0,
+        edgecolor="black"
+    )
+
+    plt.xlabel("cPRA (%)", fontsize=20)
+    plt.ylabel("Percentage of patients", fontsize=20)  
+    plt.title(title, fontsize=20)
+
+    # Recolor bins depending on threshold
+    for left, right, patch in zip(bin_edges[:-1], bin_edges[1:], patches):
+        if right <= 80:
+            patch.set_facecolor("skyblue")
+        else:
+            patch.set_facecolor("orange")
+
+    # Vertical line at 80%
+    plt.axvline(80, color="red", linestyle="--", linewidth=2)
+
+    # Add label for highly sensitized region
+    ymax = max(counts) * 1.05
+    plt.text(82, ymax, "Highly sensitized", color="orange", fontsize=12, va="bottom")
+
+    # Make y-axis tick labels larger
+    plt.tick_params(axis="y", labelsize=20)
+    plt.tick_params(axis="x", labelsize=20)
+    # Horizontal grid lines from y-axis ticks
+    plt.grid(axis="y", linestyle="--", linewidth=2, color="black", alpha=0.8)
+
+    plt.tight_layout()
+    plt.show()

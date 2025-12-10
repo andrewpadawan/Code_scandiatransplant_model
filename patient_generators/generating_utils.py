@@ -12,7 +12,6 @@ import pandas as pd
 def generate_blood_types(abo_distribution, rh_distribution, total_samples):
 
     """
-    
 
     Based on the values of Denmark from https://en.wikipedia.org/wiki/Blood_type_distribution_by_country 
     And Rh infor from https://givblod.dk/fakta-om-blod/blodtyperne/
@@ -148,7 +147,7 @@ def generate_hla_genotypes(total_samples):
     
     return genotypes, serology
 
-def generate_recipient_antibodies(HS_no_yes_list, hla_serology):
+def generate_recipient_antibodies(total_samples, hla_serology):
     all_patient_antibodies= []
     all_patient_cPRA= []
     #get all the antigens in a list to get ready to sample
@@ -157,17 +156,13 @@ def generate_recipient_antibodies(HS_no_yes_list, hla_serology):
     for locus, allele_map in hla_to_serologic.items():
         all_serologic.extend(allele_map.values())
 
-    for patient_index, item in enumerate(HS_no_yes_list):
+    for patient_index in range(total_samples):
         patient_serology = get_patient_serology_list(hla_serology, patient_index)[0]
         my_all_serologic= [antigen for antigen in all_serologic if antigen not in patient_serology]
         my_allele_freq= 0
         my_antigen_list = []
-        if item:
-            cpra= generate_cpra_value_HS()
-        else:
-            cpra= generate_cpra_value_NH()
+        cpra= sample_cPRA_uniform()
         
-        #print("My cPRA" + str(cpra))
         
         while True:
             #I sample a random antigen from the dictionary, get the gene, get the allele freq
@@ -211,33 +206,7 @@ def get_patient_serology_list(serology, patient_index):
         patient_values.extend(serology[locus][patient_index])
     return patient_values
 
-def generate_cpra_value_HS():
-    #alpha, beta_params = fit_beta(86, 96.5, 100)
-    #Literature values
-    median= 96.5
-    q1=86
-    q3= 100
-    lower_bound= 80
-    upper_bound= 100
-    #Use a normal distribution to generate random values, enforce bounds. Samples until valid sample is returned
-    std = (q3 - q1) / 1.35
-    a, b = (lower_bound - median) / std, (upper_bound - median) / std
-    sample = truncnorm.rvs(a, b, loc=median, scale=std)
-    return sample/ 100
 
-
-def generate_cpra_value_NH():
-   #Literature values
-    median= 3
-    q1=0
-    q3= 8
-    lower_bound= 0
-    upper_bound= 80
-    #Use a normal distribution to generate random values, enforce bounds. Samples until valid sample is returned
-    std = (q3 - q1) / 1.35 #approximated assuming normal dist
-    a, b = (lower_bound - median) / std, (upper_bound - median) / std
-    sample = truncnorm.rvs(a, b, loc=median, scale=std)
-    return sample/ 100
 
 def choose_HS_patients(total_samples):
     #probability HS is 14%
@@ -283,3 +252,64 @@ def check_if_acceptable_mismatch(donor_row: pd.Series, recipient: dict) -> bool:
     
     # Check compatibility: return True if no overlap
     return not any(antigen in recipient_antibodies for antigen in donor_antigens)
+
+
+
+def sample_cPRA_uniform(n_samples=1, percent_output=False, seed=None):
+    """
+    Sample cPRA using a uniform mixture over predefined intervals with given weights.
+
+    Intervals (in %):
+      - [0, 0]       with weight 0.62
+      - [1, 20]      with weight 0.08
+      - [21, 79]     with weight 0.14
+      - [80, 97]     with weight 0.05
+      - [98, 100]    with weight 0.09
+
+    Parameters
+    ----------
+    n_samples : int
+        Number of samples to generate.
+    percent_output : bool
+        If True, return values in 0–100 (%). If False, return proportions 0–1.
+    seed : int or None
+        Random seed for reproducibility.
+
+    Returns
+    -------
+    np.ndarray
+        Array of cPRA values (proportion 0–1 by default, or % if percent_output=True).
+    """
+    if seed is not None:
+        np.random.seed(seed)
+
+    # Define interval edges in percent
+    intervals = [
+        (0.0, 0.0, 0.62),   # exact zero
+        (1.0, 20.0, 0.08),
+        (21.0, 79.0, 0.14),
+        (80.0, 97.0, 0.05),
+        (98.0, 100.0, 0.09),
+    ]
+
+    # Mixture selection
+    weights = np.array([w for _, _, w in intervals], dtype=float)
+    weights = weights / weights.sum()  # safety normalization
+
+    # Choose intervals
+    choices = np.random.choice(len(intervals), size=n_samples, p=weights)
+
+    # Sample uniformly within chosen interval
+    samples_percent = np.empty(n_samples, dtype=float)
+    for i, idx in enumerate(choices):
+        lo, hi, _ = intervals[idx]
+        if lo == hi:  # exact zero bin
+            samples_percent[i] = 0.0
+        else:
+            samples_percent[i] = np.random.uniform(lo, hi)
+
+    # Return as proportion or percent
+    if percent_output:
+        return samples_percent
+    else:
+        return samples_percent / 100.0

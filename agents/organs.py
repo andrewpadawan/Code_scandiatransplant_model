@@ -16,6 +16,17 @@ class Organ:
         self.city=donor_row["CITY"]
         self.country=donor_row["COUNTRY"]
         self.donor_row= donor_row
+
+        self.geno_HLA_A=donor_row["Genomic_HLA-A"]
+        self.geno_HLA_B=donor_row["Genomic_HLA-B"]
+        self.geno_HLA_C=donor_row["Genomic_HLA-C"]
+        self.geno_HLA_DRB1=donor_row["Genomic_HLA-DRB1"]
+        self.geno_HLA_DQA1=donor_row["Genomic_HLA-DQA1"]
+        self.geno_HLA_DQB1=donor_row["Genomic_HLA-DQB1"]
+        self.geno_HLA_DPA1=donor_row["Genomic_HLA-DPA1"]
+        self.geno_HLA_DPB1=donor_row["Genomic_HLA-DPB1"]
+
+
         #All organs self register on the registry on creation
         Organ.registry.append(self)
     def print(self):
