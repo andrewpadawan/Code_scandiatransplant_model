@@ -23,7 +23,7 @@ logger = get_matching_logger()
 
 print("Initialize matching module")
 # LOAD SCENARIOS
-scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\intermediate_scenario.json")
+scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\advanced_scenario.json")
 
 
 #for country in scandiatransplant.member_countries:
@@ -71,11 +71,12 @@ for t in timesteps_to_process:
         donor_row_df = pd.DataFrame([row])
         scandiatransplant.add_donor(donor_row_df)
 
-    #print("Before matching")
-    #print(scandiatransplant.donor_list.df)
+    #Match the local waiting list
+    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,True,"abo_HLA_match", False)
 
+    #Match the Scandiatransplant waiting list
 
-    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,"abo_HLA_match", False)
+    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,False,"abo_HLA_match", False)
     
     """print("Timestep" + str(t))
     for hospital in Hospital.registry:

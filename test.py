@@ -29,8 +29,8 @@ from utils.plot_dist import *
 from patient_generators.generating_utils import *
 #organ_flows= pd.read_csv(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs")
 
-donor_generator.generate_donor(650, 1, 365, r"testing_files/intermediate_donor.csv")
-recipient_generator.generate_recipient(3500, 1, 265, r"testing_files/intermediate_recipient.csv")
+#donor_generator.generate_donor(5, 1, 5, r"testing_files/advanced_donor.csv")
+recipient_generator.generate_recipient(30, 1, 5, r"testing_files/advanced_recipient.csv")
 #check_age_distribution_by_groups_donors("testing_files/intermediate_donor.csv")
 #check_hla_distributions("testing_files/intermediate_donor.csv")
 #check_dist= hs_distribution("testing_files/intermediate_recipient.csv")
@@ -52,3 +52,9 @@ recipient_generator.generate_recipient(3500, 1, 265, r"testing_files/intermediat
 #print(summarize_by_cPRA("testing_files/intermediate_recipient.csv"))
 
 #plot_cPRA_histogram_percent_from_csv("testing_files/intermediate_recipient.csv")
+
+# Load your CSV file
+df = pd.read_csv(r"testing_files/advanced_recipient.csv")
+
+# Select the columns you want
+print(df[["AB0_BLOOD_GROUP", "cPRA", "TS"]])

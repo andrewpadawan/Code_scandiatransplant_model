@@ -48,10 +48,11 @@ def generate_recipient(total_samples, min_timestep, max_timestep, output_filepat
     df["Serologic_HLA-DPA1"]= hla_serology["DPA1"]
     df["Serologic_HLA-DPB1"]= hla_serology["DPB1"]
     #df["HS_status"]= HS_no_yes_list
-    hla_antibodies_list, cpra_list= generate_recipient_antibodies(total_samples,hla_serology)
+    hla_antibodies_list, cpra_list, TS_list= generate_recipient_antibodies(total_samples,hla_serology, abo)
 
     df["HLA_antibodies"]=hla_antibodies_list
     df["cPRA"]= cpra_list
+    df["TS"]= TS_list
     print("Generated " + str(total_samples) +  " recipients between timesteps " + str(min_timestep) + " and " + str(max_timestep) )
     # Preview
     df.to_csv(output_filepath, index=False)

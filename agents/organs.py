@@ -26,7 +26,7 @@ class Organ:
         self.geno_HLA_DPA1=donor_row["Genomic_HLA-DPA1"]
         self.geno_HLA_DPB1=donor_row["Genomic_HLA-DPB1"]
 
-
+        self.donor_age= donor_row["AGE"]
         #All organs self register on the registry on creation
         Organ.registry.append(self)
     def print(self):

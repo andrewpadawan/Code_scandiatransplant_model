@@ -2,12 +2,19 @@ import random
 from book_keeping import locations
 import numpy as np
 from collections import Counter
-from patient_generators.generating_constants import incidence_recipients, age_groups_recipients, age_groups_donors, incidence_donors, hla_frequencies, hla_to_serologic
+from patient_generators.generating_constants import *
 import copy
 from scipy.stats import truncnorm
 from scipy.stats import beta
 from scipy.optimize import minimize
 import pandas as pd
+
+abo_compatibility_receive = {
+    "O": ["O"],                  
+    "A": ["A", "O"],             
+    "B": ["B", "O"],             
+    "AB": ["A", "B", "AB", "O"], 
+}
 
 def generate_blood_types(abo_distribution, rh_distribution, total_samples):
 
@@ -147,9 +154,10 @@ def generate_hla_genotypes(total_samples):
     
     return genotypes, serology
 
-def generate_recipient_antibodies(total_samples, hla_serology):
+def generate_recipient_antibodies(total_samples, hla_serology, abo):
     all_patient_antibodies= []
     all_patient_cPRA= []
+    all_patients_TS= []
     #get all the antigens in a list to get ready to sample
     sero_to_gene= build_serologic_to_genetic(hla_to_serologic)
     all_serologic = []
@@ -163,30 +171,42 @@ def generate_recipient_antibodies(total_samples, hla_serology):
         my_antigen_list = []
         cpra= sample_cPRA_uniform()
         
-        
-        while True:
-            #I sample a random antigen from the dictionary, get the gene, get the allele freq
-            sample= random.choice(my_all_serologic)
-            genes = sero_to_gene.get(sample, [])
-            if not genes:
-                continue  # skip if no mapping found
-            gene = random.choice(genes)
-            gene_freq= check_gene_frequency(gene)
-            if my_allele_freq + gene_freq > cpra + 0.001: #I'm giving a bit of leeway sop +0.001, but otherwise resample
-                continue
-            else:
-                my_allele_freq= my_allele_freq + gene_freq
-                my_antigen_list.append(gene)
+        #if cpra is exactly zero, then the allele_freq should remain exactly so
+        if cpra == 0:
+            my_allele_freq= 0
+        else:
+            while True:
+                #I sample a random antigen from the dictionary, get the gene, get the allele freq
+                sample= random.choice(my_all_serologic)
+                genes = sero_to_gene.get(sample, [])
+                if not genes:
+                    continue  # skip if no mapping found
+                gene = random.choice(genes)
+                gene_freq= check_gene_frequency(gene)
+                if my_allele_freq + gene_freq > cpra + 0.001: #I'm giving a bit of leeway sop +0.001, but otherwise resample
+                    continue
+                else:
+                    my_allele_freq= my_allele_freq + gene_freq
+                    my_antigen_list.append(gene)
 
-            if my_allele_freq > cpra - 0.001: #also a bit of rounding for ease
-                break
+                if my_allele_freq > cpra - 0.001: #also a bit of rounding for ease
+                    break
 
         all_patient_antibodies.append(my_antigen_list)
-        all_patient_cPRA.append(round(my_allele_freq, 3))
-        #print("my freq" + str(my_allele_freq))
+        all_patient_cPRA.append(round(my_allele_freq, 6))
 
-    return all_patient_antibodies, all_patient_cPRA
+        #Use the just calculated cPRA and the abo info to calculate TS
+        all_patients_TS.append(calculate_TS(my_allele_freq, abo[patient_index] ))
 
+    return all_patient_antibodies, all_patient_cPRA, all_patients_TS
+
+def calculate_TS(cPRA, abo_group):
+    compatible_abo= abo_compatibility_receive.get(abo_group, [])
+    compatible_total = sum(abo_dist[group] for group in compatible_abo)
+    compatible_pct = compatible_total/100
+
+    TS_score= compatible_pct* (1-cPRA)
+    return TS_score
 
 
 def check_gene_frequency(gene):
@@ -313,3 +333,5 @@ def sample_cPRA_uniform(n_samples=1, percent_output=False, seed=None):
         return samples_percent
     else:
         return samples_percent / 100.0
+
+

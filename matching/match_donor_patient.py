@@ -3,18 +3,13 @@ from utils.logger import get_matching_logger, log_match, log_match_csv_dynamic
 from agents.organs import *
 from typing import List
 from agents.hospital import *
+from priority_grouping import *
 #ABO compatibility, key is the donor, values the recipients
-abo_compatibility = {
-    "O": ["O", "A", "B", "AB"],
-    "A": ["A", "AB"],
-    "B": ["B", "AB"],
-    "AB": ["AB"]
-}
 
 logger = get_matching_logger()
 has_logged_matching = False
 
-def matching(scandiatransplant, timestep,log_timestamp,organs_at_t, heuristic="greedy", verbose=True,  **kwargs):
+def matching(scandiatransplant, timestep,log_timestamp,organs_at_t,local, heuristic="greedy", verbose=True,  **kwargs):
     global has_logged_matching
 
     if not has_logged_matching:
@@ -29,6 +24,8 @@ def matching(scandiatransplant, timestep,log_timestamp,organs_at_t, heuristic="g
         scandiatransplant, log_path= _greedy_match(scandiatransplant,timestep, log_timestamp, verbose=verbose, **kwargs)
     elif heuristic == "abo_HLA_match":
         scandiatransplant, log_path=_abo_HLA_match(scandiatransplant,timestep, log_timestamp,organs_at_t, verbose=verbose, **kwargs)
+    elif heuristic == "sctp":
+        scandiatransplant, log_path=_sctp(scandiatransplant,timestep, log_timestamp,organs_at_t, verbose=verbose, **kwargs)
     else:
         raise ValueError(f"Unknown heuristic: {heuristic}")
     
@@ -128,7 +125,7 @@ def _abo_HLA_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[
             break
         #make the match based on ABO Rh compatibility
         
-        HLA_compatible_recipient_df= filter_HLA_compatible(organ, recipient_df)
+        HLA_compatible_recipient_df= filter_ALL_HLA_compatible(organ, recipient_df)
         abo_identical_df = rank_abo_identical(organ, HLA_compatible_recipient_df)
 
         if not abo_identical_df.empty:
@@ -157,87 +154,50 @@ def _abo_HLA_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[
 
 
 
-def filter_HLA_compatible(organ:Organ, recipient_df):
-    donor_alleles = [
-        organ.geno_HLA_A,
-        organ.geno_HLA_B,
-        organ.geno_HLA_C,
-        organ.geno_HLA_DRB1,
-        organ.geno_HLA_DQA1,
-        organ.geno_HLA_DQB1,
-        organ.geno_HLA_DPA1,
-        organ.geno_HLA_DPB1,
-    ]
-
-    # Filter recipients: compatible if none of the donor alleles are in their antibody list
-    compatible_df = recipient_df[
-        ~recipient_df["HLA_antibodies"].apply(
-            lambda ab_list: any(allele in ab_list for allele in donor_alleles)
-        )
-    ]
+def _sctp(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],local,verbose=True,  **kwargs):
+    if local:
+        print()
+        #Call the local allocation function here
+        local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose=True)
+    else:
+        sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose=True)
     
-    return compatible_df
 
+#TODO pass recipient_row as df
+#TODO add payback rules
+#TODO log matches, log which priority group was used
+
+def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):
    
-
-# Helping functions
-def rank_abo_identical(organ:Organ, recipient_df):
-    filtered_df = recipient_df[recipient_df["AB0_BLOOD_GROUP"] == organ.abo_blood]
-    owed_cities= check_payback(organ)
-    if owed_cities:
-        filtered_df = filtered_df[filtered_df["CITY"].isin(owed_cities)]
-
-    ranked_identical = filtered_df.sort_values(by="RECIPIENTNUMBER")
-
-    if not ranked_identical.empty:
-        return ranked_identical
-    #return only the best match (?)
-    return pd.DataFrame()
-
-def rank_abo_compatible(organ, recipient_df):
-    organ_abo= organ.abo_blood
-    owed_cities= check_payback(organ)
-    compatible_types = abo_compatibility.get(organ_abo, [])
-    compatible_recipients = recipient_df[
-        recipient_df["AB0_BLOOD_GROUP"].isin(compatible_types)
-            ]
-
-    if owed_cities:
-        compatible_recipients = compatible_recipients[compatible_recipients["CITY"].isin(owed_cities)]
-
-    ranked_compatible= compatible_recipients.sort_values(by="RECIPIENTNUMBER")
-    if not ranked_compatible.empty:
-        return ranked_compatible
-    return pd.DataFrame()
-
-
-def check_payback(organ:Organ):
-    #Simpliefied, its not checking that the organ is of the same quality
-    hospital_city= organ.city
-    organ_type = organ.type
-    hospital = next(
-            (h for h in Hospital.registry if h.city == hospital_city),
-            None
-        )
+    if verbose:
+        print("Using abo_Rh_match matching")
     
-    try:
-        payback_row = hospital.organ_exchange_table.loc[organ_type]
-    except KeyError:
-        return {}
+    donor_df_list= []
+    recipient_df = None
+    
 
-    # Filter cities where this hospital owes organs (positive values)
-    owed_cities = [city for city, count in payback_row.items() if count > 0]
-    return owed_cities
+    if scandiatransplant.donor_list.df.empty:
+        if verbose:
+            print("No donor was available at this timestep")
+        return scandiatransplant, None
+    
+    if not scandiatransplant.recipient_waitlist.df.empty: #change for local lists
+        recipient_df= scandiatransplant.recipient_waitlist.df.copy()
+    else:
+        if verbose:
+            print("Recipient list was empty")
+        return scandiatransplant, None
 
-def log_payback(recipient_df, organ):
-    recipient_series = recipient_df.iloc[0]
-    recipient_hos = next(
-            (h for h in Hospital.registry if h.city == recipient_series["CITY"]),
-            None
-        )
-    donating_hos= next(
-        (h for h in Hospital.registry if h.city == organ.city),
-        None
-    )
-    recipient_hos.organ_exchange_table.loc[organ.type, organ.city] += 1
-    donating_hos.organ_exchange_table.loc[organ.type, recipient_series["CITY"]] -= 1
+
+    for organ in organs_at_t:
+        priority_df= cascading_priority_allocation(recipient_df, organ)
+
+
+def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):
+    print()
+
+
+
+
+# Auxiliary functions
+
