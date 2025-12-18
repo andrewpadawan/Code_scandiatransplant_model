@@ -3,7 +3,7 @@ from utils.logger import get_matching_logger, log_match, log_match_csv_dynamic
 from agents.organs import *
 from typing import List
 from agents.hospital import *
-from priority_grouping import *
+from matching.priority_grouping import *
 #ABO compatibility, key is the donor, values the recipients
 
 logger = get_matching_logger()
@@ -190,7 +190,7 @@ def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp,
 
 
     for organ in organs_at_t:
-        priority_df= cascading_priority_allocation(recipient_df, organ)
+        priority_df= cascading_priority_allocation(recipient_df, organ, timestep)
 
 
 def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):

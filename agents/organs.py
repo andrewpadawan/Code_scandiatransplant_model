@@ -10,7 +10,7 @@ class Organ:
         self.exchange_obligation = exchange_obligation
         self.timestep = donor_row["TIMESTEP_ENTERED"]
         
-        self.abo_blood=donor_row["AB0_BLOOD_GROUP"]
+        self.abo_blood=donor_row["ABO_BLOOD_GROUP"]
         self.rhesus= donor_row["RHESUS_CODE"]
         
         self.city=donor_row["CITY"]

@@ -35,7 +35,7 @@ def log_match(logger, organ: Organ, recipient_df):
     recipient_id = recipient_df["RECIPIENTNUMBER"].values[0]
     recipient_city = recipient_df["CITY"].values[0]
     recipient_country = recipient_df["COUNTRY"].values[0]
-    recipient_blood = recipient_df["AB0_BLOOD_GROUP"].values[0]
+    recipient_blood = recipient_df["ABO_BLOOD_GROUP"].values[0]
     recipient_rhesus= recipient_df["RHESUS_CODE"].values[0]
     recipient_entry= recipient_df["TIMESTEP_ENTERED"].values[0]
 

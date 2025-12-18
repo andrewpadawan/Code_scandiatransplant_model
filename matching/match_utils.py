@@ -10,7 +10,7 @@ abo_compatibility = {
     "B": ["B", "AB"],
     "AB": ["AB"]
 }
-abo_identical_priority_2_to_5 = {
+dict_abo_identical_priority_2_to_5 = {
     #must be abo indetical except donors A can be exchnaged to recipients of blood AB
     "O": ["O"],
     "A": ["A", "AB"],
@@ -25,9 +25,9 @@ def abo_identical_priority_2_to_5( recipient_df, organ:Organ):
     
     organ_abo= organ.abo_blood
    
-    identical_types = abo_identical_priority_2_to_5.get(organ_abo, [])
+    identical_types = dict_abo_identical_priority_2_to_5.get(organ_abo, [])
     identical_recipients = recipient_df[
-        recipient_df["AB0_BLOOD_GROUP"].isin(identical_types)
+        recipient_df["ABO_BLOOD_GROUP"].isin(identical_types)
             ]
     if not identical_recipients.empty:
         return identical_recipients
@@ -37,7 +37,7 @@ def abo_identical_priority_2_to_5( recipient_df, organ:Organ):
 
 
 
-def filter_priority_4_compatible(organ:Organ, recipient_df):
+def filter_priority_4_compatible(organ:Organ, recipient_df, verbose):
      #If there are no udner 16 recipients it does not apply
     under_16= recipient_df[recipient_df["AGE"] < 16]
     if under_16.empty:
@@ -45,14 +45,15 @@ def filter_priority_4_compatible(organ:Organ, recipient_df):
 
     valid_indices= []
     # if there is HLA-DRB1 compatibility and in addition not more than 2 HLA-A, B mismatches. 
-    donor_alleles = organ.geno_HLA_DRB1
+    donor_alleles = [organ.geno_HLA_DRB1,]
     # Filter recipients: compatible if none of the donor alleles are in their antibody list
     compatible_DRB1_df = under_16[
         ~under_16["HLA_antibodies"].apply(
             lambda ab_list: any(allele in ab_list for allele in donor_alleles)
         )
     ]
-
+    if verbose:
+        print("After DRB1 compatibility check")
     organ_hla_a_set= set(organ.geno_HLA_A)
     organ_hla_b_set= set(organ.geno_HLA_B)
     #calculate mismatches (no more than 2 in HLA A and B)
@@ -112,7 +113,7 @@ def filter_HLA_A_B_DRB1_compatible(organ:Organ, recipient_df):
 
 # Helping functions
 def rank_abo_identical(organ:Organ, recipient_df):
-    filtered_df = recipient_df[recipient_df["AB0_BLOOD_GROUP"] == organ.abo_blood]
+    filtered_df = recipient_df[recipient_df["ABO_BLOOD_GROUP"] == organ.abo_blood]
     owed_cities= check_payback(organ)
     if owed_cities:
         filtered_df = filtered_df[filtered_df["CITY"].isin(owed_cities)]
@@ -129,7 +130,7 @@ def rank_abo_compatible(organ, recipient_df):
     owed_cities= check_payback(organ)
     compatible_types = abo_compatibility.get(organ_abo, [])
     compatible_recipients = recipient_df[
-        recipient_df["AB0_BLOOD_GROUP"].isin(compatible_types)
+        recipient_df["ABO_BLOOD_GROUP"].isin(compatible_types)
             ]
 
     if owed_cities:
@@ -172,9 +173,21 @@ def log_payback(recipient_df, organ):
     recipient_hos.organ_exchange_table.loc[organ.type, organ.city] += 1
     donating_hos.organ_exchange_table.loc[organ.type, recipient_series["CITY"]] -= 1
 
+def log_payback_ABO_age(recipient_df, organ):
+    recipient_series = recipient_df.iloc[0]
+    recipient_hos = next(
+            (h for h in Hospital.registry if h.city == recipient_series["CITY"]),
+            None
+        )
+    donating_hos= next(
+        (h for h in Hospital.registry if h.city == organ.city),
+        None
+    )
+    recipient_hos.organ_exchange_table.loc[organ.type, organ.city] += 1
+    donating_hos.organ_exchange_table.loc[organ.type, recipient_series["CITY"]] -= 1
 
 def check_STAMP_status(recipient_row):
-    return recipient_row["TS"].iloc[0] <= 2
+    return recipient_row["TS"] <= 0.02
 
 
 def is_ABO_compatible(recipient_row, organ):
@@ -183,18 +196,35 @@ def is_ABO_compatible(recipient_row, organ):
     
     return recipient_row["ABO_BLOOD_GROUP"] in compatible_types
 
+def is_ABO_identical(recipient_row, organ): 
+    """ Return True if the recipient row is ABO identical to the organ. Safe: uses .get so missing column won't raise. """ 
+    return recipient_row.get("ABO_BLOOD_GROUP") == getattr(organ, "abo_blood", None)
+
 def ABO_compatible_df(recipient_df, organ):
     organ_abo= organ.abo_blood
     
     compatible_types = abo_compatibility.get(organ_abo, [])
     compatible_recipients = recipient_df[
-        recipient_df["AB0_BLOOD_GROUP"].isin(compatible_types)
+        recipient_df["ABO_BLOOD_GROUP"].isin(compatible_types)
             ]
     return compatible_recipients
 
 def ABO_identical(organ:Organ, recipient_df):
-    filtered_df = recipient_df[recipient_df["AB0_BLOOD_GROUP"] == organ.abo_blood]
+    filtered_df = recipient_df[recipient_df["ABO_BLOOD_GROUP"] == organ.abo_blood]
     if not filtered_df.empty:
         return filtered_df
     #return only the best match (?)
     return pd.DataFrame()
+
+
+def is_same_country(recipient_row, organ):
+    """ Return True if the recipient_row's COUNTRY matches organ.country. Safe: handles missing values and does a case-insensitive, whitespace-trimmed comparison. """ 
+    # read values safely 
+    row_country = recipient_row.get("COUNTRY") 
+    organ_country = getattr(organ, "country", None) 
+    if row_country is None or organ_country is None: 
+        return False # normalize and compare 
+    try: 
+        return str(row_country).strip().upper() == str(organ_country).strip().upper() 
+    except Exception: 
+        return False
