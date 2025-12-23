@@ -48,7 +48,9 @@ log_timestamp= datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Loop through timesteps starting from 1
 for t in timesteps_to_process:
+    print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
     print("In timestep:" + str(t))
+    
     log_timestep(logger, t)
     #print("TIMESTEP " + str(t)+ " ____________________________")
     recipients_at_t = recipient_groups.get_group(t) if t in recipient_groups.groups else pd.DataFrame()
@@ -57,7 +59,7 @@ for t in timesteps_to_process:
 
     #add to scandiatranplant waitlist
     # Skip empty timesteps
-    if recipients_at_t.empty and organs_at_t.empty:
+    if recipients_at_t.empty and len(organs_at_t) == 0:
         continue
 
     # Add recipients to waitlist
@@ -71,6 +73,8 @@ for t in timesteps_to_process:
         donor_row_df = pd.DataFrame([row])
         scandiatransplant.add_donor(donor_row_df)
 
+    scandiatransplant.organ_list.extend(organs_at_t)
+    scandiatransplant.print()
     #Match the local waiting list
     scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,True,"sctp", True)
 
@@ -104,6 +108,6 @@ print(str(match_file))
 
 
 summarize_organ_flows(csv_path=match_file)
-summary_file= get_summary_file(match_file)
-print(summary_file)
-plot_transfer_heatmap(summary_file)
+#summary_file= get_summary_file(match_file)
+#print(summary_file)
+#plot_transfer_heatmap(summary_file)

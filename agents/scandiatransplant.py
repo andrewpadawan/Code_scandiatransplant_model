@@ -1,9 +1,11 @@
 from agents.waiting_lists import *
 
+
 class Scandiatransplant:
-    def __init__(self, countries= None, waitlist=None, waitlist2=None):
+    def __init__(self, countries= None, waitlist=None, waitlist2=None, waitlist3=None):
         self.recipient_waitlist = waitlist if waitlist is not None else ScandiatransplantWaitList()
         self.donor_list = waitlist2 if waitlist2 is not None else ScandiatransplantWaitList()
+        self.organ_list = waitlist3 if waitlist3 is not None else []
         self.member_countries= countries if countries is not None else []
 
     def print(self):
@@ -18,6 +20,8 @@ class Scandiatransplant:
         for country in self.member_countries:
             for hos in country.member_hospitals:
                 print(f" - {hos.city} ({hos.country}), {hos.recipient_waiting_list.get_size()} recipients")
+        print("Organ list: " )
+        print([o.organ_id for o in self.organ_list])
         print("**************************************************************")
    
    #Aggregations for waiting lists 
@@ -39,6 +43,7 @@ class Scandiatransplant:
         # Sort by DONORNUMBER
         combined_df.sort_values("DONORNUMBER", inplace=True)
         self.donor_list.df = combined_df
+
 
     def aggregate_all_lists(self):
         self.aggregate_waitlist()
@@ -189,3 +194,6 @@ class Scandiatransplant:
                 print(f"Failed to add patient {donor_id}.")
 
         return added
+
+    def remove_organ_by_id(self, organ_id):
+        self.organ_list = [o for o in self.organ_list if o.organ_id != organ_id]

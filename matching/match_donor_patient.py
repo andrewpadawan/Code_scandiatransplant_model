@@ -172,15 +172,18 @@ def _sctp(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],lo
 def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose= False,  **kwargs):
     log_path= None
     if verbose:
-        print("*********************************************************************")
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
         print("Using Scandiatransplant matching")
     recipient_df = None
     
-    if scandiatransplant.donor_list.df.empty:
+    """if scandiatransplant.donor_list.df.empty:
         if verbose:
             print("No donor was available at this timestep")
+        return scandiatransplant, None"""
+    if len(scandiatransplant.organ_list)==0:
+        if verbose:
+            print("No organ was available at this timestep")
         return scandiatransplant, None
-      
     #3) Make and print the match to a log file
     for organ in organs_at_t:
         #restart loop
@@ -208,6 +211,7 @@ def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp,
             #4) Remove donor and recipients from scandiatransplant
             scandiatransplant.remove_donor(organ.donor_id)
             scandiatransplant.remove_recipient(matched_recipient["RECIPIENTNUMBER"].values[0])
+            scandiatransplant.remove_organ_by_id(organ.organ_id)
             #log paybacks
             log_payback(matched_recipient, organ)
         else:
@@ -229,9 +233,13 @@ def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp
     recipient_df = None
     
 
-    if scandiatransplant.donor_list.df.empty:
+    """if scandiatransplant.donor_list.df.empty:
         if verbose:
             print("No donor was available at this timestep")
+        return scandiatransplant, None"""
+    if len(scandiatransplant.organ_list)==0:
+        if verbose:
+            print("No organ was available at this timestep")
         return scandiatransplant, None
     
     #Searching local waiting list
@@ -285,6 +293,8 @@ def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp
             #4) Remove donor and recipients from scandiatransplant
             scandiatransplant.remove_donor(organ.donor_id)
             scandiatransplant.remove_recipient(matched_recipient["RECIPIENTNUMBER"].values[0])
+            scandiatransplant.remove_organ_by_id(organ.organ_id)
+
             #log paybacks
             log_payback(matched_recipient, organ)
 

@@ -38,3 +38,4 @@ class Organ:
         print(f"Blood Group: {self.abo_blood} {self.rhesus}")
         print(f"Location: {self.city}, {self.country}")
         print("*******************************")
+    
