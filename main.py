@@ -57,7 +57,7 @@ for t in timesteps_to_process:
 
     #add to scandiatranplant waitlist
     # Skip empty timesteps
-    if recipients_at_t.empty and donors_at_t.empty:
+    if recipients_at_t.empty and organs_at_t.empty:
         continue
 
     # Add recipients to waitlist
@@ -72,11 +72,11 @@ for t in timesteps_to_process:
         scandiatransplant.add_donor(donor_row_df)
 
     #Match the local waiting list
-    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,True,"abo_HLA_match", False)
+    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,True,"sctp", True)
 
     #Match the Scandiatransplant waiting list
 
-    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,False,"abo_HLA_match", False)
+    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,False,"sctp", True)
     
     """print("Timestep" + str(t))
     for hospital in Hospital.registry:

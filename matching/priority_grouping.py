@@ -37,7 +37,7 @@ def cascading_priority_allocation(recipient_df, organ, timestep, verbose):
         ordered_priority_5= ordering_priority_2_to_7(priority_5,organ, timestep,verbose)
         print("Priority 5")
         return ordered_priority_5
-    
+    #TODO payback rules here
     priority_6= check_priority_6(recipient_df, organ, verbose)
     if not priority_6.empty:
         ordered_priority_6= ordering_priority_2_to_7(priority_6, organ,timestep,verbose)
@@ -49,8 +49,16 @@ def cascading_priority_allocation(recipient_df, organ, timestep, verbose):
         print("Priority 7")
         return ordered_priority_7
     
+    handle_surplus_organs()
+
     #if no priority groups found, return empty dataframe
     return recipient_df[0:0]
+
+
+#TODO implement
+def handle_surplus_organs(recipient_df, organ, timestep, verbose):
+    print()
+    
 
 def check_priority_1(recipient_df, organ, verbose):
     if verbose:
@@ -224,7 +232,7 @@ def check_priority_6(recipient_df, organ, verbose):
 def check_priority_7(recipient_df, organ, verbose):
     if verbose:
         print("For priority 7")
-#TODO THIS IS ONE THE PROCUREMENTE CENTER'S OWN WAITING LIST
+# THIS IS ONE THE PROCUREMENTE CENTER'S OWN WAITING LIST
     organ_location= organ.city
     local_recipient_df = recipient_df[recipient_df["CITY"] == organ_location]
 

@@ -13,6 +13,11 @@ def normalize_organ(name):
     return name.capitalize()
 
 def summarize_organ_flows(csv_path, output_dir="logs/summary_logs"):
+    if not csv_path or not os.path.exists(csv_path):
+        if csv_path is None:
+            print("No match file was provided, skipping summary.")
+        else: print(f"Match file not found: {csv_path}") 
+        return { "summary_table": None, "city_flow_table": None, "summary_path": None, "flow_path": None }
     df = pd.read_csv(csv_path)
     df["ORGAN_TYPE"] = df["RECIPIENT_ORGAN"].apply(normalize_organ)
 

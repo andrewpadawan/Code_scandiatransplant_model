@@ -4,6 +4,7 @@ from agents.organs import *
 from typing import List
 from agents.hospital import *
 from matching.priority_grouping import *
+from matching.local_matching import *
 #ABO compatibility, key is the donor, values the recipients
 
 logger = get_matching_logger()
@@ -25,7 +26,7 @@ def matching(scandiatransplant, timestep,log_timestamp,organs_at_t,local, heuris
     elif heuristic == "abo_HLA_match":
         scandiatransplant, log_path=_abo_HLA_match(scandiatransplant,timestep, log_timestamp,organs_at_t, verbose=verbose, **kwargs)
     elif heuristic == "sctp":
-        scandiatransplant, log_path=_sctp(scandiatransplant,timestep, log_timestamp,organs_at_t, verbose=verbose, **kwargs)
+        scandiatransplant, log_path=_sctp(scandiatransplant,timestep, log_timestamp,organs_at_t,local, verbose=verbose, **kwargs)
     else:
         raise ValueError(f"Unknown heuristic: {heuristic}")
     
@@ -154,25 +155,77 @@ def _abo_HLA_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[
 
 
 
-def _sctp(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],local,verbose=True,  **kwargs):
+def _sctp(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],local,verbose=False,  **kwargs):
     if local:
-        print()
+        
         #Call the local allocation function here
-        local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose=True)
+        scandiatransplant, log_path= local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
     else:
-        sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose=True)
+        scandiatransplant, log_path= sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
     
+    return scandiatransplant, log_path if 'log_path' in locals() else None
 
 #TODO pass recipient_row as df
 #TODO add payback rules
 #TODO log matches, log which priority group was used
 
-def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):
-   
+def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose= False,  **kwargs):
+    log_path= None
     if verbose:
-        print("Using abo_Rh_match matching")
+        print("*********************************************************************")
+        print("Using Scandiatransplant matching")
+    recipient_df = None
     
-    donor_df_list= []
+    if scandiatransplant.donor_list.df.empty:
+        if verbose:
+            print("No donor was available at this timestep")
+        return scandiatransplant, None
+      
+    #3) Make and print the match to a log file
+    for organ in organs_at_t:
+        #restart loop
+        matched_recipient = None
+        if not scandiatransplant.recipient_waitlist.df.empty: 
+            recipient_df= scandiatransplant.recipient_waitlist.df.copy()
+        else:
+            if verbose:
+                print("Recipient list was empty")
+            return scandiatransplant, None
+        #++++++++++
+        if not organ.exchange_obligation:
+            continue
+        if len(recipient_df) == 0:
+            print("Not enough recipients left to match this organ.")
+            break
+        #Call the function that makes the matching, it will return a single row df
+        matched_recipient_df= cascading_priority_allocation(recipient_df, organ, timestep, verbose)
+        
+        if not matched_recipient_df.empty:
+            matched_recipient = matched_recipient_df.iloc[[0]]
+                #log the matches
+            log_match(logger, organ, matched_recipient)
+            log_path= log_match_csv_dynamic(timestep,organ, organ.donor_row, matched_recipient, log_timestamp)
+            #4) Remove donor and recipients from scandiatransplant
+            scandiatransplant.remove_donor(organ.donor_id)
+            scandiatransplant.remove_recipient(matched_recipient["RECIPIENTNUMBER"].values[0])
+            #log paybacks
+            log_payback(matched_recipient, organ)
+        else:
+            print("No match was found for this organ")
+            continue
+
+
+    return scandiatransplant, log_path if 'log_path' in locals() else None
+
+
+def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):
+    log_path= None
+    search_national= False
+    surplus= False
+    if verbose:
+        print("*********************************************************************")
+        print("Using Scandiatransplant local matching")
+
     recipient_df = None
     
 
@@ -181,23 +234,62 @@ def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp,
             print("No donor was available at this timestep")
         return scandiatransplant, None
     
-    if not scandiatransplant.recipient_waitlist.df.empty: #change for local lists
-        recipient_df= scandiatransplant.recipient_waitlist.df.copy()
-    else:
-        if verbose:
-            print("Recipient list was empty")
-        return scandiatransplant, None
-
-
+    #Searching local waiting list
+    
+    #3) Make and print the match to a log file
     for organ in organs_at_t:
-        priority_df= cascading_priority_allocation(recipient_df, organ, timestep)
+        #update wait list
+        if not scandiatransplant.recipient_waitlist.df.empty: #change for local lists
+            recipient_df= scandiatransplant.recipient_waitlist.df.copy()
+        else:
+            if verbose:
+                print("Recipient list was empty")
+            return scandiatransplant, None
+        #reset loop
+        local_recipient_df= recipient_df[recipient_df["CITY"]==organ.city]
+        search_national= False
+        surplus= False
+        matched_recipient = None
+        #----
+        if organ.exchange_obligation:
+            continue
+        
+        #Call the function that makes the matching, it will return a single row df
+        matched_recipient_df= local_cascading_priority_allocation(local_recipient_df, organ, timestep, verbose)
+        
+        if not matched_recipient_df.empty:
+            matched_recipient = matched_recipient_df.iloc[[0]]
+        else:
+            #print("No match was found for this organ")
+            search_national= True
+            
+
+        #If no match is found at local level, national is searched *************************************
+        if search_national:
+            national_recipient_df= recipient_df[recipient_df["COUNTRY"]==organ.country]
+        #Call the function that makes the matching, it will return a single row df
+            matched_recipient_df= local_cascading_priority_allocation(national_recipient_df, organ, timestep, verbose)
+        
+            if not matched_recipient_df.empty:
+                matched_recipient = matched_recipient_df.iloc[[0]]
+            else:
+                #print("No match was found for this organ")
+                surplus= True
+        
+        if surplus:
+            #TODO
+            scandiatransplant, log_path= handle_surplus_organs(recipient_df, organ, timestep, verbose)
+        if matched_recipient is not None:
+            log_match(logger, organ, matched_recipient)
+            log_path= log_match_csv_dynamic(timestep,organ, organ.donor_row, matched_recipient, log_timestamp)
+            #4) Remove donor and recipients from scandiatransplant
+            scandiatransplant.remove_donor(organ.donor_id)
+            scandiatransplant.remove_recipient(matched_recipient["RECIPIENTNUMBER"].values[0])
+            #log paybacks
+            log_payback(matched_recipient, organ)
 
 
-def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):
-    print()
-
-
-
+    return scandiatransplant, log_path if 'log_path' in locals() else None
 
 # Auxiliary functions
 
