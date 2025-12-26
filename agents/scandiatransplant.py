@@ -1,12 +1,14 @@
 from agents.waiting_lists import *
-
+from collections import deque
 
 class Scandiatransplant:
-    def __init__(self, countries= None, waitlist=None, waitlist2=None, waitlist3=None):
+    def __init__(self, countries= None, waitlist=None, waitlist2=None, waitlist3=None, hospitals= None):
         self.recipient_waitlist = waitlist if waitlist is not None else ScandiatransplantWaitList()
         self.donor_list = waitlist2 if waitlist2 is not None else ScandiatransplantWaitList()
         self.organ_list = waitlist3 if waitlist3 is not None else []
         self.member_countries= countries if countries is not None else []
+        
+        self.rota = deque(sorted(hospitals, key=lambda h: h.city))
 
     def print(self):
         print("**************************************************************")
@@ -197,3 +199,21 @@ class Scandiatransplant:
 
     def remove_organ_by_id(self, organ_id):
         self.organ_list = [o for o in self.organ_list if o.organ_id != organ_id]
+
+    def get_next_hospital(self, offering_hospital):
+        """
+        Returns the next hospital in the rota that is NOT the offering hospital.
+        Moves the chosen hospital to the bottom of the rota.
+        """
+        for _ in range(len(self.rota)):  # one full cycle max
+            candidate = self.rota[0]
+
+            if candidate != offering_hospital:
+                # Accept → rotate so candidate goes to bottom
+                self.rota.rotate(-1)
+                return candidate
+
+            # Skip → rotate and continue
+            self.rota.rotate(-1)
+
+        return None  # no eligible hospital

@@ -68,7 +68,7 @@ def load_local_waiting_list(data, hospitals):
 
     # Step 4: Create Scandiatransplant object with countries
     countries = list(country_map.values())
-    scandiatransplant = Scandiatransplant(countries=countries)
+    scandiatransplant = Scandiatransplant(countries=countries, hospitals=hospitals )
 
     organ_list= load_organs(df_donors)
 

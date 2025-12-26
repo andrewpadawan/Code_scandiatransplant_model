@@ -183,7 +183,7 @@ def generate_recipient_antibodies(total_samples, hla_serology, abo):
                     continue  # skip if no mapping found
                 gene = random.choice(genes)
                 gene_freq= check_gene_frequency(gene)
-                if my_allele_freq + gene_freq > cpra + 0.001: #I'm giving a bit of leeway sop +0.001, but otherwise resample
+                if (my_allele_freq + gene_freq > cpra) or (my_allele_freq + gene_freq > 1): #I'm giving a bit of leeway sop +0.001, but otherwise resample
                     continue
                 else:
                     my_allele_freq= my_allele_freq + gene_freq

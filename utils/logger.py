@@ -23,7 +23,7 @@ def get_matching_logger(name="matching_logger"):
     return logger
 
 
-def log_match(logger, organ: Organ, recipient_df):
+def log_match(logger, organ: Organ, recipient_df, priority_level_assigned= 0):
     donor_id = organ.donor_id
     organ_city = organ.city
     organ_country = organ.country
@@ -31,6 +31,7 @@ def log_match(logger, organ: Organ, recipient_df):
     organ_rhesus= organ.rhesus
     organ_entry= organ.timestep
     organ_type= organ.type
+    exchange_obligation= organ.exchange_obligation
 
     recipient_id = recipient_df["RECIPIENTNUMBER"].values[0]
     recipient_city = recipient_df["CITY"].values[0]
@@ -40,9 +41,10 @@ def log_match(logger, organ: Organ, recipient_df):
     recipient_entry= recipient_df["TIMESTEP_ENTERED"].values[0]
 
     match_log = (
-       
-        f"Organ {organ_type} (City: {organ_city}, Country: {organ_country}, Blood: {organ_blood}), Rhesus: {organ_rhesus}, Entered timestep: {organ_entry} from Donor {donor_id} \n"
-        f"matched with Recipient {recipient_id} (City: {recipient_city}, Country: {recipient_country},  Blood: {recipient_blood}), Rhesus: {recipient_rhesus}, Entered timestep: {recipient_entry}"
+        
+        f"Exchange obligation: {exchange_obligation} with priority level {priority_level_assigned}\n"
+        f"Organ {organ_type} (City: {organ_city}, Country: {organ_country}, Blood: {organ_blood}), Entered timestep: {organ_entry} from Donor {donor_id} \n"
+        f"matched with Recipient {recipient_id} (City: {recipient_city}, Country: {recipient_country},  Blood: {recipient_blood}),  Entered timestep: {recipient_entry} \n"
     )
 
     logger.info(match_log)
@@ -53,7 +55,7 @@ def log_timestep(logger, timestep):
     logger.info(header)
 
 
-def log_match_csv_dynamic(timestep, organ, donor_row, recipient_df, log_timestamp):
+def log_match_csv_dynamic(timestep, organ, donor_row, recipient_df, log_timestamp, priority_level_assigned= 0):
     # Convert donor_row (Series) to single-row DataFrame
     donor_df = donor_row.to_frame().T
 
@@ -62,11 +64,11 @@ def log_match_csv_dynamic(timestep, organ, donor_row, recipient_df, log_timestam
     recipient_cols = [f"RECIPIENT_{col}" for col in recipient_df.columns]
 
     # Add organ-specific columns
-    organ_cols = ["ORGAN_ID", "ORGAN_TYPE", "EXCHANGE_OBLIGATION"]
+    organ_cols = ["ORGAN_ID", "ORGAN_TYPE", "EXCHANGE_OBLIGATION", "PRIORITY_GROUP"]
     all_headers = ["TIMESTEP"] + organ_cols + donor_cols + recipient_cols
 
     # Prepare row data
-    organ_data = [organ.organ_id, organ.type, organ.exchange_obligation]
+    organ_data = [organ.organ_id, organ.type, organ.exchange_obligation, priority_level_assigned ]
     donor_values = list(donor_df.iloc[0].values)
     recipient_values = list(recipient_df.iloc[0].values)
     row_data = [timestep] + organ_data + donor_values + recipient_values

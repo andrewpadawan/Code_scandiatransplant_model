@@ -296,3 +296,10 @@ def plot_cPRA_histogram_percent_from_csv(
 
     plt.tight_layout()
     plt.show()
+
+
+
+
+def check_priority_groups(df):
+    combo = pd.crosstab( df["EXCHANGE_OBLIGATION"], df["PRIORITY_GROUP"], dropna=False ) 
+    return combo

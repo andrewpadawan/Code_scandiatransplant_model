@@ -5,59 +5,151 @@ from typing import List
 from agents.hospital import *
 from matching.match_utils import *
 from matching.priority_ordering import *
+from matching.priority_enum import *
+import copy
 
 
-def cascading_priority_allocation(recipient_df, organ, timestep, verbose):
+def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose):
+    print(f"Allocating organ {organ.organ_id} at Scandiatransplant level")
     priority_1= check_priority_1(recipient_df, organ, verbose)
     if not priority_1.empty:
         ordered_priority_1= ordering_priority_1(priority_1,organ, timestep,verbose )
         print("Priority 1")
-        return ordered_priority_1
+        return ordered_priority_1, AllocationPriority.PRIORITY_1
     
     priority_2= check_priority_2(recipient_df, organ, verbose)
     if not priority_2.empty:
         ordered_priority_2= ordering_priority_2_to_7(priority_2,organ, timestep,verbose)
         print("Priority 2")
-        return ordered_priority_2
+        return ordered_priority_2, AllocationPriority.PRIORITY_2
     
     priority_3= check_priority_3(recipient_df, organ, verbose)
     if not priority_3.empty:
         ordered_priority_3= ordering_priority_2_to_7(priority_3,organ, timestep, verbose)
         print("Priority 3")
-        return ordered_priority_3
+        return ordered_priority_3, AllocationPriority.PRIORITY_3
     
     priority_4= check_priority_4(recipient_df, organ, verbose)
     if not priority_4.empty:
         ordered_priority_4= ordering_priority_2_to_7(priority_4,organ, timestep,verbose)
         print("Priority 4")
-        return ordered_priority_4
+        return ordered_priority_4, AllocationPriority.PRIORITY_4
     
     priority_5= check_priority_5(recipient_df, organ, verbose)
     if not priority_5.empty:
         ordered_priority_5= ordering_priority_2_to_7(priority_5,organ, timestep,verbose)
         print("Priority 5")
-        return ordered_priority_5
+        return ordered_priority_5, AllocationPriority.PRIORITY_5
     #TODO payback rules here
     priority_6= check_priority_6(recipient_df, organ, verbose)
     if not priority_6.empty:
         ordered_priority_6= ordering_priority_2_to_7(priority_6, organ,timestep,verbose)
         print("Priority 6")
-        return ordered_priority_6
+        return ordered_priority_6, AllocationPriority.PRIORITY_6
     priority_7= check_priority_7(recipient_df, organ, verbose)
     if not priority_7.empty:
         ordered_priority_7= ordering_priority_2_to_7(priority_7,organ,timestep,verbose)
         print("Priority 7")
-        return ordered_priority_7
+        return ordered_priority_7, AllocationPriority.PRIORITY_7
     
-    handle_surplus_organs()
+    matched_recipient_df, priority_level_assigned= handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, True)
+    return matched_recipient_df, priority_level_assigned
+    #if no priority groups found, return empty dataframe
+    #return recipient_df[0:0]
+
+# ...........................................................
+def local_cascading_priority_allocation(recipient_df, organ, timestep, verbose= False):
+#This function reuses the priority groups and orderings from Scandiatransplant, but applies them to the local waiting list
+#If no match is found on the local waiting list, the national waiting list is found. This is handled by the function that calls this one.
+#If still no match, surplus
+    #LAMP
+    print(f"Allocating organ {organ.organ_id} at local level")
+
+    LAMP= check_priority_6(recipient_df, organ, verbose)
+    if not LAMP.empty:
+        ordered_LAMP= ordering_priority_2_to_7(LAMP, organ,timestep,verbose)
+        print("LAMP")
+        return ordered_LAMP, AllocationPriority.LOCAL
+   
+    priority_2= check_priority_2(recipient_df, organ, verbose)
+    if not priority_2.empty:
+        ordered_priority_2= ordering_priority_2_to_7(priority_2,organ, timestep,verbose)
+        print("Priority 2")
+        return ordered_priority_2, AllocationPriority.LOCAL
+    
+    priority_3= check_priority_3(recipient_df, organ, verbose)
+    if not priority_3.empty:
+        ordered_priority_3= ordering_priority_2_to_7(priority_3,organ, timestep, verbose)
+        print("Priority 3")
+        return ordered_priority_3, AllocationPriority.LOCAL
+    
+    priority_4= check_priority_4(recipient_df, organ, verbose)
+    if not priority_4.empty:
+        ordered_priority_4= ordering_priority_2_to_7(priority_4,organ, timestep,verbose)
+        print("Priority 4")
+        return ordered_priority_4, AllocationPriority.LOCAL
+    
+    priority_5= check_priority_5(recipient_df, organ, verbose)
+    if not priority_5.empty:
+        ordered_priority_5= ordering_priority_2_to_7(priority_5,organ, timestep,verbose)
+        print("Priority 5")
+        return ordered_priority_5, AllocationPriority.LOCAL
+    #No payback because its local
+
+    priority_7= check_priority_7(recipient_df, organ, verbose)
+    if not priority_7.empty:
+        ordered_priority_7= ordering_priority_2_to_7(priority_7,organ,timestep,verbose)
+        print("Priority 7")
+        return ordered_priority_7, AllocationPriority.LOCAL
+    
+    #surplus organs handled by the function that calls this one
 
     #if no priority groups found, return empty dataframe
-    return recipient_df[0:0]
+    return recipient_df[0:0], AllocationPriority.NONE
+
+#...................................................................
+
+def handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, verbose):
+    print("Handling surplus organ")
+    
+    offering_center= organ.city
+    rota_list = scandiatransplant.rota
+
+    for hospital in list(scandiatransplant.rota):
+        #see fif there is a match inside that hospital: this is the criteria for accepting
+        #the first hospital in the rota that has a match gets the organ
+        # Skip the offering center 
+        if hospital.city == offering_center: 
+            continue
+        
+        new_organ = copy.deepcopy(organ) 
+        new_organ.city = hospital.city
+        matched_recipient_df, priority_level_assigned= local_cascading_priority_allocation(recipient_df, new_organ, timestep, verbose)
+        if verbose:
+                print(f"Organ offered by {offering_center} to {hospital.city}")
+        
+        
+        if not matched_recipient_df.empty:
+            if verbose:
+                print(f"Organ given by {offering_center} to {hospital.city}")    # Make a deep copy of the organ 
+
+            scandiatransplant.remove_organ_by_id(organ.organ_id)
+            #Update rota list
+            # Move the chosen hospital to the end of the rota
+            scandiatransplant.rota.remove(hospital)
+            scandiatransplant.rota.append(hospital)
+
+            return matched_recipient_df, AllocationPriority.SURPLUS
+        
+
+    if verbose: print(f"No matched recipient for surplus organ {organ.organ_id} at timestep {timestep}") 
+    # Return an empty DataFrame and AllocationPriority.NONE 
+        
+    return recipient_df[0:0], AllocationPriority.NONE
 
 
-#TODO implement
-def handle_surplus_organs(recipient_df, organ, timestep, verbose):
-    print()
+
+    
     
 
 def check_priority_1(recipient_df, organ, verbose):

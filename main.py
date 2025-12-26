@@ -76,11 +76,11 @@ for t in timesteps_to_process:
     scandiatransplant.organ_list.extend(organs_at_t)
     scandiatransplant.print()
     #Match the local waiting list
-    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,True,"sctp", True)
+    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,True,"sctp", False)
 
     #Match the Scandiatransplant waiting list
 
-    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,False,"sctp", True)
+    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,False,"sctp", False)
     
     """print("Timestep" + str(t))
     for hospital in Hospital.registry:
