@@ -115,13 +115,20 @@ def handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, verb
     offering_center= organ.city
     rota_list = scandiatransplant.rota
 
-    for hospital in list(scandiatransplant.rota):
+    same_country = [h for h in scandiatransplant.rota 
+                if h.country == organ.country and h.city != offering_center]
+
+    other_countries = [h for h in scandiatransplant.rota 
+                   if h.country != organ.country]
+
+    #Organs are first offered to centers in the same country and then the rest
+    #This puts the centers in rota order in both categories, one after the other.
+    for hospital in same_country + other_countries:
         #see fif there is a match inside that hospital: this is the criteria for accepting
         #the first hospital in the rota that has a match gets the organ
         # Skip the offering center 
-        if hospital.city == offering_center: 
-            continue
-        
+
+
         new_organ = copy.deepcopy(organ) 
         new_organ.city = hospital.city
         matched_recipient_df, priority_level_assigned= local_cascading_priority_allocation(recipient_df, new_organ, timestep, verbose)
