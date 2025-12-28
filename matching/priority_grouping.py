@@ -45,7 +45,7 @@ def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplan
     #CHECK PAYBACK HERE
     
     payback_recipient_df= pay_back_abo_age_payback(recipient_df, organ, timestep, verbose)
-    if not matched_recipient_df.empty:
+    if not payback_recipient_df.empty:
         # this functions calles local_cascading_priority_allocation which returns already ordered match list ordered_payback= ordering_priority_2_to_7(payback_recipient_df,organ, timestep,verbose)
         print("Payback")
         return payback_recipient_df, AllocationPriority.PAYBACK
@@ -62,7 +62,7 @@ def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplan
         print("Priority 7")
         return ordered_priority_7, AllocationPriority.PRIORITY_7
     
-    matched_recipient_df, priority_level_assigned= handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, True)
+    matched_recipient_df, priority_level_assigned= handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, False)
     return matched_recipient_df, priority_level_assigned
     #if no priority groups found, return empty dataframe
     #return recipient_df[0:0]
@@ -364,6 +364,7 @@ def check_priority_7(recipient_df, organ, verbose):
 
 # --------------------------------------------------------------
 def pay_back_abo_age_payback(recipient_df, organ, timestep, verbose):
+   
     organ_abo = organ.abo_blood
     organ_age = organ.donor_age
     hospital_city = organ.city
@@ -390,11 +391,12 @@ def pay_back_abo_age_payback(recipient_df, organ, timestep, verbose):
             continue
 
         # Filter tuples that match ABO and age criteria
-        matches = [
-            (abo, age)
-            for abo, age in tuple_list
-            if abo == organ_abo and abs(age - organ_age) <= 15
-        ]
+        matches = []
+        for abo, age in tuple_list:
+            print(f"Checking {abo=} {organ_abo=} | {age=} {organ_age=} | diff={abs(age - organ_age)}")
+            if abo == organ_abo and abs(age - organ_age) <= 15:
+                matches.append((abo, age))
+
 
         # Only keep cities with at least one valid match
         if matches:

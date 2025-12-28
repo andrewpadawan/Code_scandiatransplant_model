@@ -9,7 +9,7 @@ from matching.priority_grouping import *
 logger = get_matching_logger()
 has_logged_matching = False
 
-def matching(scandiatransplant, timestep,log_timestamp,organs_at_t,local, heuristic="greedy", verbose=True,  **kwargs):
+def matching(scandiatransplant, timestep,log_timestamp,organs_at_t,local, heuristic="greedy", verbose=False,  **kwargs):
     global has_logged_matching
 
     if not has_logged_matching:
@@ -87,7 +87,7 @@ def _greedy_match(scandiatransplant, timestep, log_timestamp, verbose=True, **kw
     return scandiatransplant, log_path if 'log_path' in locals() else None
 
 
-def _abo_HLA_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):
+def _abo_HLA_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=False,  **kwargs):
     #Very simple allocation policy:
     #1) If it matches (abo identical), check if payback, then sorted by time on waiting list
     #2) Abo compatible, check if payback, then sorted by time on waiting list
@@ -231,7 +231,7 @@ def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp,
     return scandiatransplant, log_path if 'log_path' in locals() else None
 
 
-def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=True,  **kwargs):
+def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose=False,  **kwargs):
     log_path= None
     search_national= False
     surplus= False

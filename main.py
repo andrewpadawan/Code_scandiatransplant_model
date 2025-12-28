@@ -74,7 +74,7 @@ for t in timesteps_to_process:
         scandiatransplant.add_donor(donor_row_df)
 
     scandiatransplant.organ_list.extend(organs_at_t)
-    scandiatransplant.print()
+    #scandiatransplant.print()
     #Match the local waiting list
     scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,True,"sctp", False)
 
@@ -82,15 +82,16 @@ for t in timesteps_to_process:
 
     scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,False,"sctp", False)
     
-    """print("Timestep" + str(t))
+
     for hospital in Hospital.registry:
-        hospital.print()"""
+        hospital.print()
 
 
 
     if incoming_match_file is not None:
         match_file= incoming_match_file
     
+
     #print("After matching")
     #print(scandiatransplant.donor_list.df)
     
@@ -107,7 +108,7 @@ print(str(match_file))
 
 
 
-summarize_organ_flows(csv_path=match_file)
+#summarize_organ_flows(csv_path=match_file)
 #summary_file= get_summary_file(match_file)
 #print(summary_file)
 #plot_transfer_heatmap(summary_file)
