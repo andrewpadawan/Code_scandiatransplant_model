@@ -194,11 +194,13 @@ def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp,
                 print("Recipient list was empty")
             return scandiatransplant, None
         #++++++++++
+
         if not organ.exchange_obligation:
             continue
         if len(recipient_df) == 0:
             print("Not enough recipients left to match this organ.")
             break
+
         #Call the function that makes the matching, it will return a single row df
         matched_recipient_df, priority_level_assigned= cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose)
         
@@ -211,8 +213,16 @@ def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp,
             scandiatransplant.remove_donor(organ.donor_id)
             scandiatransplant.remove_recipient(matched_recipient["RECIPIENTNUMBER"].values[0])
             scandiatransplant.remove_organ_by_id(organ.organ_id)
-            #log paybacks
-            log_payback(matched_recipient, organ)
+            #log paybacks (for obligated exchange, priority groups 1-5)
+            if priority_level_assigned in (
+                AllocationPriority.PRIORITY_1,
+                AllocationPriority.PRIORITY_2,
+                AllocationPriority.PRIORITY_3,
+                AllocationPriority.PRIORITY_4,
+                AllocationPriority.PRIORITY_5,
+            ):
+                log_debt_payback_ABO_age(matched_recipient, organ)
+
         else:
             print("No match was found for this organ")
             continue
@@ -299,7 +309,7 @@ def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp
             scandiatransplant.remove_organ_by_id(organ.organ_id)
 
             #log paybacks
-            log_payback(matched_recipient, organ)
+            #log_payback(matched_recipient, organ)
 
 
     return scandiatransplant, log_path if 'log_path' in locals() else None

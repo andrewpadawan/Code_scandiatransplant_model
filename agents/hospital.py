@@ -13,7 +13,7 @@ class Hospital:
         self.donor_list = LocalWaitList(waitlist_df)
         #Each hospital will keep this table to keep track of the exchange obligations
         self.organ_exchange_table = pd.DataFrame(
-            {city: [0]*len(organs) for city in city_country_map.keys()},
+            {city: [[] for _ in organs] for city in city_country_map.keys()},
             index=organs
         )
         #All hospitals self register on the registry on creation

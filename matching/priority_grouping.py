@@ -10,6 +10,7 @@ import copy
 
 
 def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose):
+    #This function retunrs the chosen recipient (one recipient, in df form) or an empty df
     print(f"Allocating organ {organ.organ_id} at Scandiatransplant level")
     priority_1= check_priority_1(recipient_df, organ, verbose)
     if not priority_1.empty:
@@ -40,7 +41,16 @@ def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplan
         ordered_priority_5= ordering_priority_2_to_7(priority_5,organ, timestep,verbose)
         print("Priority 5")
         return ordered_priority_5, AllocationPriority.PRIORITY_5
-    #TODO payback rules here
+    
+    #CHECK PAYBACK HERE
+    
+    payback_recipient_df= pay_back_abo_age_payback(recipient_df, organ, timestep, verbose)
+    if not matched_recipient_df.empty:
+        # this functions calles local_cascading_priority_allocation which returns already ordered match list ordered_payback= ordering_priority_2_to_7(payback_recipient_df,organ, timestep,verbose)
+        print("Payback")
+        return payback_recipient_df, AllocationPriority.PAYBACK
+    
+    # LAMP AND LOCAL LIST
     priority_6= check_priority_6(recipient_df, organ, verbose)
     if not priority_6.empty:
         ordered_priority_6= ordering_priority_2_to_7(priority_6, organ,timestep,verbose)
@@ -350,3 +360,67 @@ def check_priority_7(recipient_df, organ, verbose):
     
     # Slice the original DataFrame to return only the valid recipients
     return recipient_df.loc[valid_indices]
+
+
+# --------------------------------------------------------------
+def pay_back_abo_age_payback(recipient_df, organ, timestep, verbose):
+    organ_abo = organ.abo_blood
+    organ_age = organ.donor_age
+    hospital_city = organ.city
+    organ_type = organ.type
+
+    # Find the hospital object
+    hospital = next((h for h in Hospital.registry if h.city == hospital_city), None)
+    if hospital is None:
+        return {}
+
+    # Get the payback row for this organ type
+    try:
+        payback_row = hospital.organ_exchange_table.loc[organ_type]
+    except KeyError:
+        return {}
+
+    valid_paybacks = {}
+
+    # Iterate through each city and its list of tuples
+    for city, tuple_list in payback_row.items():
+
+        # Skip if the cell is empty or not a list
+        if not isinstance(tuple_list, list) or len(tuple_list) == 0:
+            continue
+
+        # Filter tuples that match ABO and age criteria
+        matches = [
+            (abo, age)
+            for abo, age in tuple_list
+            if abo == organ_abo and abs(age - organ_age) <= 15
+        ]
+
+        # Only keep cities with at least one valid match
+        if matches:
+            valid_paybacks[city] = matches
+
+    #Choose one of the possible paybacks if more than one (random)
+    if not valid_paybacks: 
+        return recipient_df.iloc[0:0]
+    
+    chosen_city = random.choice(list(valid_paybacks.keys()))
+    #If more than one organ debt can be satisfied by this one organ for one particular city
+    #Then the first one in the list is considered paid back
+    tuple_to_remove = valid_paybacks[chosen_city][0]
+
+    cell_list = hospital.organ_exchange_table.at[organ.type, chosen_city]
+
+    if tuple_to_remove in cell_list: 
+        cell_list.remove(tuple_to_remove)
+        if verbose: 
+            print(f"Payback satisfied: {hospital_city} → {chosen_city} using {tuple_to_remove}")
+
+    #Assign locally the organ to the city that it is being paid back to
+    new_organ = copy.deepcopy(organ) 
+    new_organ.city = chosen_city
+    matched_recipient_df, priority_level_assigned= local_cascading_priority_allocation(recipient_df, new_organ, timestep, verbose)
+    
+    return matched_recipient_df
+
+    

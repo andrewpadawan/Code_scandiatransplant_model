@@ -3,7 +3,7 @@ from utils.logger import get_matching_logger, log_match, log_match_csv_dynamic
 from agents.organs import *
 from typing import List
 from agents.hospital import *
-
+import random
 abo_compatibility = {
     "O": ["O", "A", "B", "AB"],
     "A": ["A", "AB"],
@@ -173,18 +173,28 @@ def log_payback(recipient_df, organ):
     recipient_hos.organ_exchange_table.loc[organ.type, organ.city] += 1
     donating_hos.organ_exchange_table.loc[organ.type, recipient_series["CITY"]] -= 1
 
-def log_payback_ABO_age(recipient_df, organ):
+def log_debt_payback_ABO_age(recipient_df, organ):
+    owed_city = organ.city
+    organ_abo = organ.abo_blood
+    organ_age = organ.donor_age
     recipient_series = recipient_df.iloc[0]
-    recipient_hos = next(
-            (h for h in Hospital.registry if h.city == recipient_series["CITY"]),
-            None
-        )
-    donating_hos= next(
-        (h for h in Hospital.registry if h.city == organ.city),
+
+    # Find the hospital that RECEIVED the organ (and now owes payback)
+    indebted_hos = next(
+        (h for h in Hospital.registry if h.city == recipient_series["CITY"]),
         None
     )
-    recipient_hos.organ_exchange_table.loc[organ.type, organ.city] += 1
-    donating_hos.organ_exchange_table.loc[organ.type, recipient_series["CITY"]] -= 1
+
+    if indebted_hos is None:
+        return
+
+    # Get the existing list for this organ type and owed city
+    cell_list = indebted_hos.organ_exchange_table.at[organ.type, owed_city]
+
+    # Append the tuple (ABO, age)
+    cell_list.append((organ_abo, organ_age))
+
+
 
 def check_STAMP_status(recipient_row):
     return recipient_row["TS"] <= 0.02

@@ -10,4 +10,5 @@ class AllocationPriority(Enum):
     PRIORITY_7 = auto()
     SURPLUS= auto()
     LOCAL= auto()
+    PAYBACK= auto()
     NONE = auto()
