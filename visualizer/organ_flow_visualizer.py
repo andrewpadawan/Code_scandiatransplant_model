@@ -143,7 +143,7 @@ def animate_organ_flows(csv_path, shapefile_path):
     timestep_paths, timestep_labels, flow_counts, flow_metadata = [], [], [], []
 
     for ts, group in grouped:
-        paths = build_synchronized_paths(group, steps_per_timestep=25)
+        paths = build_synchronized_paths(group, steps_per_timestep=10)
         timestep_paths.append(paths)
         timestep_labels.append(ts)
         flow_counts.append(len(paths))
@@ -312,7 +312,7 @@ def animate_organ_flows(csv_path, shapefile_path):
 
 
 
-    timer = fig.canvas.new_timer(interval=30)
+    timer = fig.canvas.new_timer(interval=10)
     timer.add_callback(advance_frame)
     timer.start()
 
