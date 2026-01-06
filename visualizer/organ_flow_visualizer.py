@@ -74,7 +74,7 @@ def interpolate_path(start, end, steps=50):
     lons = np.linspace(lon1, lon2, steps)
     return list(zip(lats, lons))
 
-def build_synchronized_paths(flows, steps_per_timestep=25, delay_per_duplicate=10):
+def build_synchronized_paths(flows, steps_per_timestep=10, delay_per_duplicate=10):
     all_paths = []
     route_counts = {}
 
@@ -143,7 +143,7 @@ def animate_organ_flows(csv_path, shapefile_path):
     timestep_paths, timestep_labels, flow_counts, flow_metadata = [], [], [], []
 
     for ts, group in grouped:
-        paths = build_synchronized_paths(group, steps_per_timestep=25)
+        paths = build_synchronized_paths(group, steps_per_timestep=10)
         timestep_paths.append(paths)
         timestep_labels.append(ts)
         flow_counts.append(len(paths))
@@ -312,7 +312,7 @@ def animate_organ_flows(csv_path, shapefile_path):
 
 
 
-    timer = fig.canvas.new_timer(interval=30)
+    timer = fig.canvas.new_timer(interval=10)
     timer.add_callback(advance_frame)
     timer.start()
 

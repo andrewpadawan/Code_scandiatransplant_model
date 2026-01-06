@@ -48,7 +48,7 @@ log_timestamp= datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Loop through timesteps starting from 1
 for t in timesteps_to_process:
-    print("In timestep:" + str(t))
+    #print("In timestep:" + str(t))
     log_timestep(logger, t)
     #print("TIMESTEP " + str(t)+ " ____________________________")
     recipients_at_t = recipient_groups.get_group(t) if t in recipient_groups.groups else pd.DataFrame()
@@ -95,7 +95,7 @@ print(str(match_file))
 #print(scandiatransplant.donor_list.df)
 
 
-#animate_organ_flows(csv_path=match_file, shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
+animate_organ_flows(csv_path=match_file, shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
 
 #plot_organ_flow_graph_on_map(csv_path=match_file)
 
