@@ -8,7 +8,7 @@ import pandas as pd
 from matching.match_donor_patient import *
 import sys
 from visualizer.organ_flow_visualizer import animate_organ_flows
-from visualizer.summary import summarize_organ_flows
+from visualizer.summary import *
 from visualizer.graphs import plot_organ_flow_graph_on_map
 from datetime import datetime
 from collections import defaultdict
@@ -48,8 +48,8 @@ log_timestamp= datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Loop through timesteps starting from 1
 for t in timesteps_to_process:
-    print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
-    print("In timestep:" + str(t))
+    #print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+    #print("In timestep:" + str(t))
     
     log_timestep(logger, t)
     #print("TIMESTEP " + str(t)+ " ____________________________")
@@ -83,8 +83,8 @@ for t in timesteps_to_process:
     scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,False,"sctp", False)
     
 
-    for hospital in Hospital.registry:
-        hospital.print()
+    #for hospital in Hospital.registry:
+    #    hospital.print()
 
 
 
@@ -96,7 +96,7 @@ for t in timesteps_to_process:
     #print(scandiatransplant.donor_list.df)
     
 
-print(str(match_file))
+#print(str(match_file))
 #print(scandiatransplant.recipient_waitlist.df)
 #print(scandiatransplant.donor_list.df)
 
@@ -108,7 +108,7 @@ print(str(match_file))
 
 
 
-#summarize_organ_flows(csv_path=match_file)
-#summary_file= get_summary_file(match_file)
+summarize_organ_flows_countries(csv_path=match_file)
+summary_file= get_summary_file(match_file)
 #print(summary_file)
-#plot_transfer_heatmap(summary_file)
+plot_transfer_heatmap(summary_file)

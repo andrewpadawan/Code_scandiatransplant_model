@@ -11,7 +11,8 @@ import copy
 
 def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose):
     #This function retunrs the chosen recipient (one recipient, in df form) or an empty df
-    print(f"Allocating organ {organ.organ_id} at Scandiatransplant level")
+    if verbose:
+        print(f"Allocating organ {organ.organ_id} at Scandiatransplant level")
     priority_1= check_priority_1(recipient_df, organ, verbose)
     if not priority_1.empty:
         ordered_priority_1= ordering_priority_1(priority_1,organ, timestep,verbose )
@@ -73,7 +74,8 @@ def local_cascading_priority_allocation(recipient_df, organ, timestep, verbose= 
 #If no match is found on the local waiting list, the national waiting list is found. This is handled by the function that calls this one.
 #If still no match, surplus
     #LAMP
-    print(f"Allocating organ {organ.organ_id} at local level")
+    if verbose:
+        print(f"Allocating organ {organ.organ_id} at local level")
 
     LAMP= check_priority_6(recipient_df, organ, verbose)
     if not LAMP.empty:
