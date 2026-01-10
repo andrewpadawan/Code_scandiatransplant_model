@@ -74,6 +74,7 @@ def generate_locations(total_samples, seed=None):
 
 
 def generate_timesteps(total_samples, zero_fraction=0.6, min_timestep=1, max_timestep=365):
+    print("Generating timesetps")
     # Calculate how many should have timestep 0
     zero_count = int(total_samples * zero_fraction)
 
@@ -88,10 +89,11 @@ def generate_timesteps(total_samples, zero_fraction=0.6, min_timestep=1, max_tim
     all_timesteps = fixed_timesteps + list(random_timesteps)
     all_timesteps.sort()  # Sort in ascending order
     #np.random.shuffle(all_timesteps)
-
+    print("Done")
     return all_timesteps
 
 def generate_recipient_ages(total_samples, seed=None):
+    print("Generating recipient ages")
     if seed is not None:
         np.random.seed(seed)
 
@@ -108,7 +110,7 @@ def generate_recipient_ages(total_samples, seed=None):
         for i in group_indices
     ])
     np.random.shuffle(sampled_ages)
-
+    print("Done")
     return sampled_ages
 
 def generate_donor_ages(total_samples, seed=None):
@@ -131,7 +133,7 @@ def generate_donor_ages(total_samples, seed=None):
     return sampled_ages
 
 def generate_hla_genotypes(total_samples):
-    
+    print("Generating HLA genotypes")
     genotypes = {locus: [] for locus in hla_frequencies.keys()}
     serology  = {locus: [] for locus in hla_frequencies.keys()}
     
@@ -151,10 +153,11 @@ def generate_hla_genotypes(total_samples):
                 else:
                     translated.append(f"Unknown({allele})")
             serology[locus].append(translated)
-    
+    print("DOne")
     return genotypes, serology
 
 def generate_recipient_antibodies(total_samples, hla_serology, abo):
+    print("Generating antibodies")
     all_patient_antibodies= []
     all_patient_cPRA= []
     all_patients_TS= []
@@ -165,6 +168,7 @@ def generate_recipient_antibodies(total_samples, hla_serology, abo):
         all_serologic.extend(allele_map.values())
 
     for patient_index in range(total_samples):
+        print("Generating antibodies for recipient" + str(patient_index))
         patient_serology = get_patient_serology_list(hla_serology, patient_index)[0]
         my_all_serologic= [antigen for antigen in all_serologic if antigen not in patient_serology]
         my_allele_freq= 0
@@ -175,29 +179,57 @@ def generate_recipient_antibodies(total_samples, hla_serology, abo):
         if cpra == 0:
             my_allele_freq= 0
         else:
+            attempts = 0
+            
             while True:
+                attempts += 1
+                # If we tried 10 times, force accept whatever we have 
+
                 #I sample a random antigen from the dictionary, get the gene, get the allele freq
                 sample= random.choice(my_all_serologic)
                 genes = sero_to_gene.get(sample, [])
                 if not genes:
                     continue  # skip if no mapping found
                 gene = random.choice(genes)
+
+                #Not sample same antibody twice or more
+                if gene in my_antigen_list:
+                    continue
+
                 gene_freq= check_gene_frequency(gene)
-                if (my_allele_freq + gene_freq > cpra) or (my_allele_freq + gene_freq > 1): #I'm giving a bit of leeway sop +0.001, but otherwise resample
+
+                if attempts >= 10: 
+                    if my_allele_freq <= 1:
+                    # Stop trying, keep whatever we have so far
+                        break
+
+                if (my_allele_freq + gene_freq > cpra + 0.02) or (my_allele_freq + gene_freq > 1): #I'm giving a bit of leeway sop +0.001, but otherwise resample
                     continue
                 else:
                     my_allele_freq= my_allele_freq + gene_freq
-                    my_antigen_list.append(gene)
+                    #my_antigen_list.append(gene)
+                    if isinstance(gene, str):
+                        my_antigen_list.append(gene)
+                    else:
+                        # Convert numeric allele codes to strings
+                        my_antigen_list.append(str(gene))
+
+
+                    my_all_serologic.remove(sample)
 
                 if my_allele_freq > cpra - 0.001: #also a bit of rounding for ease
                     break
+
+                
+                
+
 
         all_patient_antibodies.append(my_antigen_list)
         all_patient_cPRA.append(round(my_allele_freq, 6))
 
         #Use the just calculated cPRA and the abo info to calculate TS
         all_patients_TS.append(calculate_TS(my_allele_freq, abo[patient_index] ))
-
+    print("Done")
     return all_patient_antibodies, all_patient_cPRA, all_patients_TS
 
 def calculate_TS(cPRA, abo_group):

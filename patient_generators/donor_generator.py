@@ -39,14 +39,14 @@ def generate_donor(total_samples, min_timestep, max_timestep, output_filepath):
     df["Genomic_HLA-DQB1"]= hla_genotype["DQB1"]
     df["Genomic_HLA-DPA1"]= hla_genotype["DPA1"]
     df["Genomic_HLA-DPB1"]= hla_genotype["DPB1"]
-    """df["Serologic_HLA-A"]= hla_serology["A"]
+    df["Serologic_HLA-A"]= hla_serology["A"]
     df["Serologic_HLA-B"]= hla_serology["B"]
     df["Serologic_HLA-C"]= hla_serology["C"]
     df["Serologic_HLA-DRB1"]= hla_serology["DRB1"]
     df["Serologic_HLA-DQA1"]= hla_serology["DQA1"]
     df["Serologic_HLA-DQB1"]= hla_serology["DQB1"]
     df["Serologic_HLA-DPA1"]= hla_serology["DPA1"]
-    df["Serologic_HLA-DPB1"]= hla_serology["DPB1"]"""
+    df["Serologic_HLA-DPB1"]= hla_serology["DPB1"]
 
     print(df.head())
     # Preview

@@ -9,6 +9,7 @@ class Scandiatransplant:
         self.member_countries= countries if countries is not None else []
         
         self.rota = deque(sorted(hospitals, key=lambda h: h.city))
+        self.unmatched_organs= []
 
     def print(self):
         print("**************************************************************")
@@ -24,6 +25,8 @@ class Scandiatransplant:
                 print(f" - {hos.city} ({hos.country}), {hos.recipient_waiting_list.get_size()} recipients")
         print("Organ list: " )
         print([o.organ_id for o in self.organ_list])
+        print("UNMATCHED organ list: " )
+        print([o.organ_id for o in self.unmatched_organs])
         print("**************************************************************")
    
    #Aggregations for waiting lists 

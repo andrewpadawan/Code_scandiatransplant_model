@@ -48,8 +48,8 @@ log_timestamp= datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Loop through timesteps starting from 1
 for t in timesteps_to_process:
-    #print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
-    #print("In timestep:" + str(t))
+    print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+    print("In timestep:" + str(t))
     
     log_timestep(logger, t)
     #print("TIMESTEP " + str(t)+ " ____________________________")
@@ -57,6 +57,7 @@ for t in timesteps_to_process:
     donors_at_t = donor_groups.get_group(t) if t in donor_groups.groups else pd.DataFrame()
     organs_at_t = organ_groups.get(t, [])
 
+    
     #add to scandiatranplant waitlist
     # Skip empty timesteps
     if recipients_at_t.empty and len(organs_at_t) == 0:
@@ -74,6 +75,7 @@ for t in timesteps_to_process:
         scandiatransplant.add_donor(donor_row_df)
 
     scandiatransplant.organ_list.extend(organs_at_t)
+
     #scandiatransplant.print()
     #Match the local waiting list
     scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,True,"sctp", False)

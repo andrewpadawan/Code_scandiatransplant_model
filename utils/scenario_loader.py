@@ -31,7 +31,8 @@ def load_local_waiting_list(data, hospitals):
 
         # Load CSV into DataFrame
     try:
-        df_recipients = pd.read_csv(recipient_list)
+        df_recipients = pd.read_csv(recipient_list, converters={'HLA_antibodies': eval})
+        #df_recipients = pd.read_csv(recipient_list)
         df_donors = pd.read_csv(donor_list)
         # Optional: reset index to ensure it's clean and sequential
         df_recipients.reset_index(drop=True, inplace=True)

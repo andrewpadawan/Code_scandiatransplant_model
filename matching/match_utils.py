@@ -4,6 +4,7 @@ from agents.organs import *
 from typing import List
 from agents.hospital import *
 import random
+import numpy as np
 abo_compatibility = {
     "O": ["O", "A", "B", "AB"],
     "A": ["A", "AB"],
@@ -43,17 +44,21 @@ def filter_priority_4_compatible(organ:Organ, recipient_df, verbose):
     if under_16.empty:
         return recipient_df.iloc[0:0]
 
+    valid_indices_DRB1= []
     valid_indices= []
     # if there is HLA-DRB1 compatibility and in addition not more than 2 HLA-A, B mismatches. 
-    donor_alleles = [organ.geno_HLA_DRB1,]
-    # Filter recipients: compatible if none of the donor alleles are in their antibody list
-    compatible_DRB1_df = under_16[
-        ~under_16["HLA_antibodies"].apply(
-            lambda ab_list: any(allele in ab_list for allele in donor_alleles)
-        )
-    ]
-    if verbose:
-        print("After DRB1 compatibility check")
+    donor_DRB1_set = set(organ.sero_HLA_DRB1)
+    # Filter recipients: DRB1 compatible, so no mismatches
+    for idx, recipient_row in under_16.iterrows(): 
+
+        recipient_alleles = (recipient_row["Serologic_HLA-DRB1"] ) 
+        recipient_set = set(recipient_alleles)
+
+        # Check compatibility: donor must be subset of recipient 
+        if donor_DRB1_set.issubset(recipient_set): 
+            valid_indices_DRB1.append(idx)
+
+    compatible_DRB1_df= under_16.loc[valid_indices_DRB1]
     organ_hla_a_set= set(organ.geno_HLA_A)
     organ_hla_b_set= set(organ.geno_HLA_B)
     #calculate mismatches (no more than 2 in HLA A and B)
@@ -73,7 +78,7 @@ def filter_priority_4_compatible(organ:Organ, recipient_df, verbose):
     # Return a DataFrame of all valid recipients
     return recipient_df.loc[valid_indices]
 
-def filter_ALL_HLA_compatible(organ:Organ, recipient_df):
+def filter_HLA_priority_1(organ:Organ, recipient_df):
     donor_alleles = [
         organ.geno_HLA_A,
         organ.geno_HLA_B,
@@ -86,29 +91,72 @@ def filter_ALL_HLA_compatible(organ:Organ, recipient_df):
     ]
 
     # Filter recipients: compatible if none of the donor alleles are in their antibody list
-    compatible_df = recipient_df[
-        ~recipient_df["HLA_antibodies"].apply(
-            lambda ab_list: any(allele in ab_list for allele in donor_alleles)
-        )
-    ]
-    
+    mask = recipient_df["HLA_antibodies"].apply(
+    lambda antibodies: not any(a in donor_alleles for a in antibodies)
+)
+
+    filtered_df = recipient_df[mask]
+
+    compatible_df= sample_rows(filtered_df)
     return compatible_df
 
 def filter_HLA_A_B_DRB1_compatible(organ:Organ, recipient_df):
+    donor_alleles = (
+        organ.sero_HLA_A +
+        organ.sero_HLA_B +
+        organ.sero_HLA_DRB1)
+    
+    valid_indices= []
+    organ_hla_set= set(donor_alleles)
+
+
+    for idx, recipient_row in recipient_df.iterrows(): 
+
+        recipient_alleles = ( recipient_row["Serologic_HLA-A"] + recipient_row["Serologic_HLA-B"] + recipient_row["Serologic_HLA-DRB1"] ) 
+        recipient_set = set(recipient_alleles)
+
+        # Check compatibility: no mismatches 
+        #if not organ_hla_set.issubset(recipient_set): 
+            #continue
+        if not organ_hla_set == recipient_set: 
+            continue
+        valid_indices.append(idx)
+    # Return a DataFrame of all valid recipients
+    return recipient_df.loc[valid_indices]
+    
+    
+
+"""OLDdef filter_HLA_A_B_DRB1_compatible(organ:Organ, recipient_df):
     donor_alleles = [
         organ.geno_HLA_A,
         organ.geno_HLA_B,
         organ.geno_HLA_DRB1,
     ]
+    #print("Type of the read list data")
+    #print(type(recipient_df["HLA_antibodies"].iloc[0])  )  # Filter recipients: compatible if none of the donor alleles are in their antibody list
 
-    # Filter recipients: compatible if none of the donor alleles are in their antibody list
-    compatible_df = recipient_df[
-        ~recipient_df["HLA_antibodies"].apply(
-            lambda ab_list: any(allele in ab_list for allele in donor_alleles)
-        )
-    ]
-    
-    return compatible_df
+    #print("Type of donor alleles")
+    #print(type(donor_alleles[0]))
+    mask = recipient_df["HLA_antibodies"].apply(
+    lambda antibodies: not any(a in donor_alleles for a in antibodies)
+)
+
+    filtered_df = recipient_df[mask]
+
+    compatible_df= sample_rows(filtered_df, 0.0005)
+    return compatible_df"""
+
+
+def sample_rows(df, p=0.1, random_state=None):
+    """
+    Returns a subset of the dataframe where each row is kept
+    independently with probability p.
+    """
+    if random_state is not None:
+        np.random.seed(random_state)
+
+    mask = np.random.rand(len(df)) < p
+    return df[mask].reset_index(drop=True)
 
 
 # Helping functions

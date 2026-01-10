@@ -27,7 +27,7 @@ def generate_recipient(total_samples, min_timestep, max_timestep, output_filepat
     df["AGE"]= generate_recipient_ages(total_samples)
     df["CITY"]= city_list
     df["COUNTRY"]= country_list
-    df["TIMESTEP_ENTERED"]= generate_timesteps(total_samples, 0.6, min_timestep, max_timestep)
+    df["TIMESTEP_ENTERED"]= generate_timesteps(total_samples, 0.65, min_timestep, max_timestep)
     hla_genotype, hla_serology= generate_hla_genotypes(total_samples)
     
     
@@ -39,14 +39,14 @@ def generate_recipient(total_samples, min_timestep, max_timestep, output_filepat
     df["Genomic_HLA-DQB1"]= hla_genotype["DQB1"]
     df["Genomic_HLA-DPA1"]= hla_genotype["DPA1"]
     df["Genomic_HLA-DPB1"]= hla_genotype["DPB1"]
-    """df["Serologic_HLA-A"]= hla_serology["A"]
+    df["Serologic_HLA-A"]= hla_serology["A"]
     df["Serologic_HLA-B"]= hla_serology["B"]
     df["Serologic_HLA-C"]= hla_serology["C"]
     df["Serologic_HLA-DRB1"]= hla_serology["DRB1"]
     df["Serologic_HLA-DQA1"]= hla_serology["DQA1"]
     df["Serologic_HLA-DQB1"]= hla_serology["DQB1"]
     df["Serologic_HLA-DPA1"]= hla_serology["DPA1"]
-    df["Serologic_HLA-DPB1"]= hla_serology["DPB1"]"""
+    df["Serologic_HLA-DPB1"]= hla_serology["DPB1"]
     #df["HS_status"]= HS_no_yes_list
     hla_antibodies_list, cpra_list, TS_list= generate_recipient_antibodies(total_samples,hla_serology, abo)
 

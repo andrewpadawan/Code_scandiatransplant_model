@@ -27,10 +27,17 @@ import scipy
 from scipy.stats import truncnorm
 from utils.plot_dist import *
 from patient_generators.generating_utils import *
+
+from visualizer.heatmap import *
+from visualizer.summary import *
+from utils.aux_functions import *
+
 #organ_flows= pd.read_csv(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs")
 
-donor_generator.generate_donor(683, 1, 365, r"testing_files/advanced_donor.csv")
-recipient_generator.generate_recipient(3394, 1, 365, r"testing_files/advanced_recipient.csv")
+donor_generator.generate_donor(550, 1, 365, r"testing_files/advanced_donor.csv")
+#recipient_generator.generate_recipient(1, 1, 1, r"testing_files/advanced_recipient.csv")
+recipient_generator.generate_recipient(3300, 1, 365, r"testing_files/advanced_recipient.csv")
+
 #check_age_distribution_by_groups_donors("testing_files/intermediate_donor.csv")
 #check_hla_distributions("testing_files/intermediate_donor.csv")
 #check_dist= hs_distribution("testing_files/intermediate_recipient.csv")
@@ -69,6 +76,11 @@ else:
 
 
 
-df = pd.read_csv(r"logs/csv_logs/matching_20251226_205635.csv")
+df = pd.read_csv(r"logs/csv_logs/matching_20260110_153223.csv")
 
 check_priority_groups(df).to_csv("priority_summary.csv")
+
+summarize_organ_flows_countries(csv_path=r"logs/csv_logs/matching_20260110_153223.csv")
+summary_file= get_summary_file(r"logs/csv_logs/matching_20260110_153223.csv")
+#print(summary_file)
+plot_transfer_heatmap(summary_file)

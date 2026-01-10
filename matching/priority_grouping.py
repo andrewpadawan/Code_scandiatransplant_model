@@ -63,6 +63,7 @@ def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplan
         print("Priority 7")
         return ordered_priority_7, AllocationPriority.PRIORITY_7
     
+    print("SCTP suplus")
     matched_recipient_df, priority_level_assigned= handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, False)
     return matched_recipient_df, priority_level_assigned
     #if no priority groups found, return empty dataframe
@@ -82,7 +83,7 @@ def local_cascading_priority_allocation(recipient_df, organ, timestep, verbose= 
         ordered_LAMP= ordering_priority_2_to_7(LAMP, organ,timestep,verbose)
         print("LAMP")
         return ordered_LAMP, AllocationPriority.LOCAL
-   
+    """
     priority_2= check_priority_2(recipient_df, organ, verbose)
     if not priority_2.empty:
         ordered_priority_2= ordering_priority_2_to_7(priority_2,organ, timestep,verbose)
@@ -107,12 +108,12 @@ def local_cascading_priority_allocation(recipient_df, organ, timestep, verbose= 
         print("Priority 5")
         return ordered_priority_5, AllocationPriority.LOCAL
     #No payback because its local
-
-    priority_7= check_priority_7(recipient_df, organ, verbose)
-    if not priority_7.empty:
-        ordered_priority_7= ordering_priority_2_to_7(priority_7,organ,timestep,verbose)
-        print("Priority 7")
-        return ordered_priority_7, AllocationPriority.LOCAL
+    """
+    matched_locally= match_compatible(recipient_df, organ, verbose)
+    if not matched_locally.empty:
+        ordered_matched_locally= ordering_priority_2_to_7(matched_locally,organ,timestep,verbose)
+        print("Matched locally no priority")
+        return ordered_matched_locally, AllocationPriority.LOCAL
     
     #surplus organs handled by the function that calls this one
 
@@ -122,7 +123,7 @@ def local_cascading_priority_allocation(recipient_df, organ, timestep, verbose= 
 #...................................................................
 
 def handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, verbose):
-    print("Handling surplus organ")
+    #print("Handling surplus organ")
     
     offering_center= organ.city
     rota_list = scandiatransplant.rota
@@ -149,8 +150,8 @@ def handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, verb
         
         
         if not matched_recipient_df.empty:
-            if verbose:
-                print(f"Organ given by {offering_center} to {hospital.city}")    # Make a deep copy of the organ 
+            #if verbose:
+            print(f"Organ given by {offering_center} to {hospital.city}")    # Make a deep copy of the organ 
 
             scandiatransplant.remove_organ_by_id(organ.organ_id)
             #Update rota list
@@ -161,7 +162,7 @@ def handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, verb
             return matched_recipient_df, AllocationPriority.SURPLUS
         
 
-    if verbose: print(f"No matched recipient for surplus organ {organ.organ_id} at timestep {timestep}") 
+    print(f"No matched recipient for surplus organ {organ.organ_id} at timestep {timestep}") 
     # Return an empty DataFrame and AllocationPriority.NONE 
         
     return recipient_df[0:0], AllocationPriority.NONE
@@ -186,7 +187,7 @@ def check_priority_1(recipient_df, organ, verbose):
         
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
-        compatible_df = filter_ALL_HLA_compatible(organ, recipient_one_df)
+        compatible_df = filter_HLA_priority_1(organ, recipient_one_df)
         if compatible_df .empty:
             continue
         
@@ -242,7 +243,7 @@ def check_priority_3(recipient_df, organ, verbose):
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
         compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
-
+        #compatible_df=recipient_df[0:0]
         if compatible_df.empty:
             continue
 
@@ -330,7 +331,7 @@ def check_priority_6(recipient_df, organ, verbose):
         
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
-        compatible_df = filter_ALL_HLA_compatible(organ, recipient_one_df)
+        compatible_df = filter_HLA_priority_1(organ, recipient_one_df)
         if compatible_df .empty:
             continue
         
@@ -354,7 +355,9 @@ def check_priority_7(recipient_df, organ, verbose):
         
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
-        compatible_df = filter_ALL_HLA_compatible(organ, recipient_one_df)
+        #compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
+        #ORDERED BY LESS MISMATCHES
+        compatible_df=local_recipient_df
         if compatible_df.empty:
             continue
         
@@ -363,7 +366,25 @@ def check_priority_7(recipient_df, organ, verbose):
     # Slice the original DataFrame to return only the valid recipients
     return recipient_df.loc[valid_indices]
 
+def match_compatible(recipient_df, organ, verbose):
+    if verbose:
+        print("Matching all compatible in local allocation (city or national)")
 
+    valid_indices = []
+    for idx, recipient_row in recipient_df.iterrows():
+        if not is_ABO_compatible(recipient_row, organ):
+            continue
+        
+        # Wrap row into one-row DataFrame for compatibility filter
+        recipient_one_df = recipient_row.to_frame().T
+        compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
+        if compatible_df.empty:
+            continue
+        
+        valid_indices.append(idx)
+    
+    # Slice the original DataFrame to return only the valid recipients
+    return recipient_df.loc[valid_indices]
 # --------------------------------------------------------------
 def pay_back_abo_age_payback(recipient_df, organ, timestep, verbose):
    
@@ -395,7 +416,7 @@ def pay_back_abo_age_payback(recipient_df, organ, timestep, verbose):
         # Filter tuples that match ABO and age criteria
         matches = []
         for abo, age in tuple_list:
-            print(f"Checking {abo=} {organ_abo=} | {age=} {organ_age=} | diff={abs(age - organ_age)}")
+            #print(f"Checking {abo=} {organ_abo=} | {age=} {organ_age=} | diff={abs(age - organ_age)}")
             if abo == organ_abo and abs(age - organ_age) <= 15:
                 matches.append((abo, age))
 
@@ -417,8 +438,8 @@ def pay_back_abo_age_payback(recipient_df, organ, timestep, verbose):
 
     if tuple_to_remove in cell_list: 
         cell_list.remove(tuple_to_remove)
-        if verbose: 
-            print(f"Payback satisfied: {hospital_city} → {chosen_city} using {tuple_to_remove}")
+        
+        print(f"Payback satisfied: {hospital_city} → {chosen_city} using {tuple_to_remove}")
 
     #Assign locally the organ to the city that it is being paid back to
     new_organ = copy.deepcopy(organ) 
