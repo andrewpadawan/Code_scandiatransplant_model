@@ -3,7 +3,7 @@ from utils.logger import get_matching_logger, log_match, log_match_csv_dynamic
 from agents.organs import *
 from typing import List
 from agents.hospital import *
-
+from collections import Counter
 from matching.match_utils import *
 
 def ordering_priority_1(recipient_df, organ:Organ, timestep, verbose=False):
@@ -44,11 +44,12 @@ def ordering_priority_1(recipient_df, organ:Organ, timestep, verbose=False):
 
 
 
-def ordering_priority_2_to_7(recipient_df, organ:Organ, timestep, verbose= False):
-    """After the exchange priority, the list is as default sorted in the order of 
+"""
+OLDdef ordering_priority_2_to_7(recipient_df, organ:Organ, timestep, verbose= False):
+    After the exchange priority, the list is as default sorted in the order of 
 matching AB0, followed by lowest number of DR mismatches, followed by 
 lowest number of AB mismatches and the waiting time. 
-All priority 6 and 7 patients that are AB0 compatibility will appear"""
+All priority 6 and 7 patients that are AB0 compatibility will appear
 #At each step, check if more than one of the recipients covers the condition, and if so, continue. If not, return that recipient
     if verbose:
          print("Considered for ordering: ")
@@ -110,7 +111,58 @@ All priority 6 and 7 patients that are AB0 compatibility will appear"""
     top_recipient = priority_df_id_sorted.head(1)
     # Return a DataFrame of all valid recipients
     return top_recipient
+"""
 
+
+def ordering_priority_2_to_7(recipient_df, organ: Organ, timestep, verbose=False):
+    """After the exchange priority, the list is sorted by:
+    1. ABO identical
+    2. Lowest DRB1 mismatches
+    3. Lowest A+B mismatches
+    4. Longest waiting time (lowest RECIPIENTNUMBER)
+    """
+    if verbose:
+        print("Considered for ordering:")
+        print(recipient_df)
+
+    ABO_identical_df = ABO_identical(organ, recipient_df)
+    priority_df = ABO_identical_df if not ABO_identical_df.empty else recipient_df
+
+    if len(priority_df) == 1:
+        return priority_df
+
+    dr_mismatches = []
+    a_mismatches = []
+    b_mismatches = []
+
+    for _, row in priority_df.iterrows():
+        dr_mismatches.append(count_mismatches(organ.geno_HLA_DRB1, row["Genomic_HLA-DRB1"]))
+        a_mismatches.append(count_mismatches(organ.geno_HLA_A, row["Genomic_HLA-A"]))
+        b_mismatches.append(count_mismatches(organ.geno_HLA_B, row["Genomic_HLA-B"]))
+
+    priority_df = priority_df.copy()
+    priority_df["DRB1_mismatches"] = dr_mismatches
+    priority_df["AB_mismatches"] = [a + b for a, b in zip(a_mismatches, b_mismatches)]
+
+    if verbose:
+        print("Df considered for ordering after mismatch check:")
+        print(priority_df)
+
+    # Step 1: Filter by lowest DRB1 mismatches
+    min_drb1 = priority_df["DRB1_mismatches"].min()
+    priority_df = priority_df[priority_df["DRB1_mismatches"] == min_drb1]
+    if len(priority_df) == 1:
+        return priority_df
+
+    # Step 2: Filter by lowest A+B mismatches
+    min_ab = priority_df["AB_mismatches"].min()
+    priority_df = priority_df[priority_df["AB_mismatches"] == min_ab]
+    if len(priority_df) == 1:
+        return priority_df
+
+    # Step 3: Sort by waiting time (proxy: RECIPIENTNUMBER)
+    priority_df = priority_df.sort_values("RECIPIENTNUMBER", ascending=True)
+    return priority_df.head(1)
 
 #Auxiliary functions for ordering 
 

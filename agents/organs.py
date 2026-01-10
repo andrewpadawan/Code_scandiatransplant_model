@@ -34,7 +34,8 @@ class Organ:
         self.sero_HLA_DQB1=donor_row["Serologic_HLA-DQB1"]
         self.sero_HLA_DPA1=donor_row["Serologic_HLA-DPA1"]
         self.sero_HLA_DPB1=donor_row["Serologic_HLA-DPB1"]
-        
+
+        self.bw4_6= donor_row["Calculated Bw4/BW6"]
         self.donor_age= donor_row["AGE"]
         #All organs self register on the registry on creation
         Organ.registry.append(self)

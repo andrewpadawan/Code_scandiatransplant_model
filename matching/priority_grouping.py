@@ -215,7 +215,7 @@ def check_priority_2(recipient_df, organ, verbose):
             print("cPRA check passed by "+ str(idx))
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
-        compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
+        compatible_df = filter_HLA_A_B_DRB1_BW4_6_compatible(organ, recipient_one_df)
 
         if compatible_df.empty:
             continue
@@ -242,7 +242,7 @@ def check_priority_3(recipient_df, organ, verbose):
 
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
-        compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
+        compatible_df = filter_HLA_A_B_DRB1_BW4_6_compatible(organ, recipient_one_df)
         #compatible_df=recipient_df[0:0]
         if compatible_df.empty:
             continue
@@ -297,7 +297,7 @@ def check_priority_5(recipient_df, organ,verbose ):
 
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
-        compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
+        compatible_df = filter_HLA_A_B_DRB1_BW4_6_compatible(organ, recipient_one_df)
 
         if compatible_df.empty:
             continue
@@ -357,7 +357,7 @@ def check_priority_7(recipient_df, organ, verbose):
         recipient_one_df = recipient_row.to_frame().T
         #compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
         #ORDERED BY LESS MISMATCHES
-        compatible_df=local_recipient_df
+        compatible_df=recipient_one_df
         if compatible_df.empty:
             continue
         
@@ -377,7 +377,8 @@ def match_compatible(recipient_df, organ, verbose):
         
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
-        compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
+        #compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
+        compatible_df= recipient_one_df
         if compatible_df.empty:
             continue
         

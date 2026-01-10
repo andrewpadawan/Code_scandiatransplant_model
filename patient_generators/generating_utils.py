@@ -367,3 +367,36 @@ def sample_cPRA_uniform(n_samples=1, percent_output=False, seed=None):
         return samples_percent / 100.0
 
 
+from typing import List
+
+def assign_bw4_bw6_bulk(hla_a_list: List[List[str]], hla_b_list: List[List[str]]) -> List[str]:
+    # Define Bw4 and Bw6 sets
+    bw4 = bw4_mapping
+
+    bw6 = bw6_mapping
+
+    def normalize(antigen):
+        return antigen.split("(")[0]
+
+    bw_status_list = []
+
+    for a_antigens, b_antigens in zip(hla_a_list, hla_b_list):
+        bw4_count = 0
+        bw6_count = 0
+        all_antigens = a_antigens + b_antigens
+
+        for antigen in all_antigens:
+            norm = normalize(antigen)
+            if antigen in bw4 or norm in bw4:
+                bw4_count += 1
+            elif antigen in bw6 or norm in bw6:
+                bw6_count += 1
+
+        if bw4_count == 2:
+            bw_status_list.append("Bw4/Bw4")
+        elif bw4_count == 1:
+            bw_status_list.append("Bw4/Bw6")
+        else:
+            bw_status_list.append("Bw6/Bw6")
+
+    return bw_status_list

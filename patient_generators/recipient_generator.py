@@ -13,7 +13,7 @@ def generate_recipient(total_samples, min_timestep, max_timestep, output_filepat
     recipient_ids= []
 
     # Make my pandas df
-    headers = ['RECIPIENTNUMBER', 'ABO_BLOOD_GROUP', 'RHESUS_CODE', 'ORGAN',"AGE","CITY", "COUNTRY","TIMESTEP_ENTERED","Genomic_HLA-A","Genomic_HLA-B","Genomic_HLA-C","Genomic_HLA-DRB1","Genomic_HLA-DQA1","Genomic_HLA-DQB1","Genomic_HLA-DPA1" ,"Genomic_HLA-DPB1","Serologic_HLA-A","Serologic_HLA-B","Serologic_HLA-C","Serologic_HLA-DRB1","Serologic_HLA-DQA1","Serologic_HLA-DQB1","Serologic_HLA-DPA1" ,"Serologic_HLA-DPB1",  "HLA_antibodies", "cPRA", "TS", 'Notes']
+    headers = ['RECIPIENTNUMBER', 'ABO_BLOOD_GROUP', 'RHESUS_CODE', 'ORGAN',"AGE","CITY", "COUNTRY","TIMESTEP_ENTERED","Genomic_HLA-A","Genomic_HLA-B","Genomic_HLA-C","Genomic_HLA-DRB1","Genomic_HLA-DQA1","Genomic_HLA-DQB1","Genomic_HLA-DPA1" ,"Genomic_HLA-DPB1","Serologic_HLA-A","Serologic_HLA-B","Serologic_HLA-C","Serologic_HLA-DRB1","Serologic_HLA-DQA1","Serologic_HLA-DQB1","Serologic_HLA-DPA1" ,"Serologic_HLA-DPB1", "Calculated Bw4/BW6", "HLA_antibodies", "cPRA", "TS", 'Notes']
     df = pd.DataFrame(columns=headers)
 
     for i in range(len(abo)):
@@ -47,6 +47,8 @@ def generate_recipient(total_samples, min_timestep, max_timestep, output_filepat
     df["Serologic_HLA-DQB1"]= hla_serology["DQB1"]
     df["Serologic_HLA-DPA1"]= hla_serology["DPA1"]
     df["Serologic_HLA-DPB1"]= hla_serology["DPB1"]
+
+    df["Calculated Bw4/BW6"]=assign_bw4_bw6_bulk(hla_serology["A"],hla_serology["B"])
     #df["HS_status"]= HS_no_yes_list
     hla_antibodies_list, cpra_list, TS_list= generate_recipient_antibodies(total_samples,hla_serology, abo)
 

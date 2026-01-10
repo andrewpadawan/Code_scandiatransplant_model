@@ -15,7 +15,7 @@ def generate_donor(total_samples, min_timestep, max_timestep, output_filepath):
         donor_ids.append("D" + str(i).zfill(4))
 
     # Make my pandas df
-    headers = ['DONORNUMBER', 'ABO_BLOOD_GROUP', 'RHESUS_CODE', 'GRAFT_TYPE',"AGE", "CITY", "COUNTRY", "TIMESTEP_ENTERED", "Genomic_HLA-A","Genomic_HLA-B","Genomic_HLA-C","Genomic_HLA-DRB1","Genomic_HLA-DQA1","Genomic_HLA-DQB1","Genomic_HLA-DPA1" ,"Genomic_HLA-DPB1","Serologic_HLA-A","Serologic_HLA-B","Serologic_HLA-C","Serologic_HLA-DRB1","Serologic_HLA-DQA1","Serologic_HLA-DQB1","Serologic_HLA-DPA1" ,"Serologic_HLA-DPB1",'Notes']
+    headers = ['DONORNUMBER', 'ABO_BLOOD_GROUP', 'RHESUS_CODE', 'GRAFT_TYPE',"AGE", "CITY", "COUNTRY", "TIMESTEP_ENTERED", "Genomic_HLA-A","Genomic_HLA-B","Genomic_HLA-C","Genomic_HLA-DRB1","Genomic_HLA-DQA1","Genomic_HLA-DQB1","Genomic_HLA-DPA1" ,"Genomic_HLA-DPB1","Serologic_HLA-A","Serologic_HLA-B","Serologic_HLA-C","Serologic_HLA-DRB1","Serologic_HLA-DQA1","Serologic_HLA-DQB1","Serologic_HLA-DPA1" ,"Serologic_HLA-DPB1","Calculated Bw4/BW6",'Notes']
     df = pd.DataFrame(columns=headers)
 
     
@@ -48,6 +48,7 @@ def generate_donor(total_samples, min_timestep, max_timestep, output_filepath):
     df["Serologic_HLA-DPA1"]= hla_serology["DPA1"]
     df["Serologic_HLA-DPB1"]= hla_serology["DPB1"]
 
+    df["Calculated Bw4/BW6"]=assign_bw4_bw6_bulk(hla_serology["A"],hla_serology["B"])
     print(df.head())
     # Preview
     print("Generated " + str(total_samples) +  " donors between timesteps " + str(min_timestep) + " and " + str(max_timestep) )

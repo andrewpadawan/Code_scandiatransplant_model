@@ -5,6 +5,7 @@ from typing import List
 from agents.hospital import *
 import random
 import numpy as np
+from collections import Counter
 abo_compatibility = {
     "O": ["O", "A", "B", "AB"],
     "A": ["A", "AB"],
@@ -99,8 +100,8 @@ def filter_HLA_priority_1(organ:Organ, recipient_df):
 
     compatible_df= sample_rows(filtered_df)
     return compatible_df
-
-def filter_HLA_A_B_DRB1_compatible(organ:Organ, recipient_df):
+"""
+def filter_HLA_A_B_DRB1_BW4_6_compatible(organ:Organ, recipient_df):
     donor_alleles = (
         organ.sero_HLA_A +
         organ.sero_HLA_B +
@@ -120,11 +121,47 @@ def filter_HLA_A_B_DRB1_compatible(organ:Organ, recipient_df):
             #continue
         if not organ_hla_set == recipient_set: 
             continue
+
+        if not organ.bw4_6 == recipient_row["Calculated Bw4/BW6"]:
+            continue
         valid_indices.append(idx)
     # Return a DataFrame of all valid recipients
-    return recipient_df.loc[valid_indices]
+    return recipient_df.loc[valid_indices]"""
     
+def filter_HLA_A_B_DRB1_BW4_6_compatible(organ:Organ, recipient_df):
+    donor_alleles = (
+        organ.sero_HLA_A +
+        organ.sero_HLA_B +
+        organ.sero_HLA_DRB1)
     
+    valid_indices= []
+    organ_hla_set= set(donor_alleles)
+
+
+    for idx, recipient_row in recipient_df.iterrows():
+        recipient_alleles = (
+            recipient_row["Serologic_HLA-A"] +
+            recipient_row["Serologic_HLA-B"] +
+            recipient_row["Serologic_HLA-DRB1"]
+        )
+
+        donor_alleles = (
+            organ.sero_HLA_A +
+            organ.sero_HLA_B +
+            organ.sero_HLA_DRB1
+        )
+
+        mismatches = count_mismatches(donor_alleles, recipient_alleles)
+        if mismatches > 0:
+            continue
+
+        if organ.bw4_6 != recipient_row["Calculated Bw4/BW6"]:
+            continue
+
+        valid_indices.append(idx)
+
+    # Return a DataFrame of all valid recipients
+    return recipient_df.loc[valid_indices]  
 
 """OLDdef filter_HLA_A_B_DRB1_compatible(organ:Organ, recipient_df):
     donor_alleles = [
@@ -147,7 +184,7 @@ def filter_HLA_A_B_DRB1_compatible(organ:Organ, recipient_df):
     return compatible_df"""
 
 
-def sample_rows(df, p=0.1, random_state=None):
+def sample_rows(df, p=0.3, random_state=None):
     """
     Returns a subset of the dataframe where each row is kept
     independently with probability p.
@@ -286,3 +323,16 @@ def is_same_country(recipient_row, organ):
         return str(row_country).strip().upper() == str(organ_country).strip().upper() 
     except Exception: 
         return False
+    
+
+
+
+
+def count_mismatches(donor_alleles, recipient_alleles):
+    donor_counts = Counter(donor_alleles)
+    recipient_counts = Counter(recipient_alleles)
+    mismatches = 0
+    for allele, d_count in donor_counts.items():
+        r_count = recipient_counts.get(allele, 0)
+        mismatches += max(d_count - r_count, 0)
+    return mismatches
