@@ -84,3 +84,5 @@ summarize_organ_flows_countries(csv_path=r"logs/csv_logs/matching_20260110_19043
 summary_file= get_summary_file(r"logs/csv_logs/matching_20260110_190436.csv")
 #print(summary_file)
 plot_transfer_heatmap(summary_file)
+match_file= r"logs/csv_logs/matching_20260110_190436.csv"
+animate_organ_flows(csv_path=match_file, shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")

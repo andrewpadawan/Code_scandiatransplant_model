@@ -53,7 +53,7 @@ def haversine_km(coord1, coord2):
     a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
     return R * 2 * atan2(sqrt(a), sqrt(1 - a))
 
-def compute_frame_counts(flows, max_frames=40):
+def compute_frame_counts(flows, max_frames=30):
     distances = []
     for _, row in flows.iterrows():
         donor = CITY_COORDS.get(row['DONOR_CITY'])
@@ -74,7 +74,7 @@ def interpolate_path(start, end, steps=50):
     lons = np.linspace(lon1, lon2, steps)
     return list(zip(lats, lons))
 
-def build_synchronized_paths(flows, steps_per_timestep=25, delay_per_duplicate=10):
+def build_synchronized_paths(flows, steps_per_timestep=20, delay_per_duplicate=10):
     all_paths = []
     route_counts = {}
 
@@ -184,9 +184,15 @@ def animate_organ_flows(csv_path, shapefile_path):
                 seen_flows.add(global_index)
                 row = meta.iloc[j]
                 organ = normalize_organ(row.DONOR_GRAFT_TYPE)
+
+                # Skip same-city transfers
+                if row.DONOR_CITY == row.RECIPIENT_CITY:
+                    continue
+
                 cumulative_arrivals[organ][row.RECIPIENT_CITY] += 1
                 cumulative_departures[organ][row.DONOR_CITY] += 1
                 new_arrival_cities.add(row.RECIPIENT_CITY)
+
 
         organ_tables = {}
         organ_types = sorted(set(cumulative_arrivals.keys()) | set(cumulative_departures.keys()))
@@ -319,8 +325,6 @@ def animate_organ_flows(csv_path, shapefile_path):
     update(0)
     plt.tight_layout()
     plt.show()
-
-
 
 
 
