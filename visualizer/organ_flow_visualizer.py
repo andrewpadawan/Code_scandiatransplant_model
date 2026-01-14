@@ -143,7 +143,7 @@ def animate_organ_flows(csv_path, shapefile_path):
     timestep_paths, timestep_labels, flow_counts, flow_metadata = [], [], [], []
 
     for ts, group in grouped:
-        paths = build_synchronized_paths(group, steps_per_timestep=10)
+        paths = build_synchronized_paths(group, steps_per_timestep=25)
         timestep_paths.append(paths)
         timestep_labels.append(ts)
         flow_counts.append(len(paths))
@@ -184,9 +184,15 @@ def animate_organ_flows(csv_path, shapefile_path):
                 seen_flows.add(global_index)
                 row = meta.iloc[j]
                 organ = normalize_organ(row.DONOR_GRAFT_TYPE)
+
+                # Skip same-city transfers
+                if row.DONOR_CITY == row.RECIPIENT_CITY:
+                    continue
+
                 cumulative_arrivals[organ][row.RECIPIENT_CITY] += 1
                 cumulative_departures[organ][row.DONOR_CITY] += 1
                 new_arrival_cities.add(row.RECIPIENT_CITY)
+
 
         organ_tables = {}
         organ_types = sorted(set(cumulative_arrivals.keys()) | set(cumulative_departures.keys()))
@@ -312,15 +318,12 @@ def animate_organ_flows(csv_path, shapefile_path):
 
 
 
-    timer = fig.canvas.new_timer(interval=10)
+    timer = fig.canvas.new_timer(interval=30)
     timer.add_callback(advance_frame)
     timer.start()
 
     update(0)
     plt.tight_layout()
     plt.show()
-
-
-
 
 
