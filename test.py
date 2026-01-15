@@ -29,7 +29,7 @@ from utils.plot_dist import *
 from patient_generators.generating_utils import *
 #organ_flows= pd.read_csv(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs")
 
-donor_generator.generate_donor(683, 1, 365, r"testing_files/intermediate_donor.csv")
+donor_generator.generate_donor(550, 1, 365, r"testing_files/intermediate_donor.csv")
 recipient_generator.generate_recipient(3394, 1, 365, r"testing_files/intermediate_recipient.csv")
 #check_age_distribution_by_groups_donors("testing_files/intermediate_donor.csv")
 #check_hla_distributions("testing_files/intermediate_donor.csv")

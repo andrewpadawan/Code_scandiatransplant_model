@@ -8,7 +8,7 @@ import pandas as pd
 from matching.match_donor_patient import *
 import sys
 from visualizer.organ_flow_visualizer import animate_organ_flows
-from visualizer.summary import summarize_organ_flows
+from visualizer.summary import *
 from visualizer.graphs import plot_organ_flow_graph_on_map
 from datetime import datetime
 from collections import defaultdict
@@ -102,7 +102,7 @@ animate_organ_flows(csv_path=match_file, shapefile_path=r"C:\Users\reddr\OneDriv
 
 
 
-summarize_organ_flows(csv_path=match_file)
+summarize_organ_flows_countries(csv_path=match_file)
 summary_file= get_summary_file(match_file)
 print(summary_file)
 plot_transfer_heatmap(summary_file)
