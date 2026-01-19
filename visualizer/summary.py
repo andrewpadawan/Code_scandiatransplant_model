@@ -246,6 +246,7 @@ def summarize_organ_flows_countries(csv_path, output_dir="logs/summary_logs"):
     df["DONOR_COUNTRY"] = df["DONOR_CITY"].map(CITY_TO_COUNTRY)
     df["RECIPIENT_COUNTRY"] = df["RECIPIENT_CITY"].map(CITY_TO_COUNTRY)
 
+    df_all = df.copy()
     # Warn if any cities are missing
     missing = df[df["DONOR_COUNTRY"].isna() | df["RECIPIENT_COUNTRY"].isna()]
     if not missing.empty:
@@ -283,6 +284,22 @@ def summarize_organ_flows_countries(csv_path, output_dir="logs/summary_logs"):
     summary["NUM_IMPORTED"] = summary["NUM_IMPORTED"].fillna(0).astype(int)
     summary["NET_FLOW"] = summary["NUM_IMPORTED"] - summary["NUM_EXPORTED"]
 
+    # -----------------------------
+    # X. Total kidneys transplanted IN each country
+    # -----------------------------
+    kidney_counts = (
+        df_all[df_all["ORGAN_TYPE"] == "Kidney"]
+        .groupby("RECIPIENT_COUNTRY")
+        .size()
+        .reset_index(name="TOTAL_KIDNEYS_TRANSPLANTED")
+        .rename(columns={"RECIPIENT_COUNTRY": "COUNTRY"})
+    )
+
+
+    summary = pd.merge(summary, kidney_counts, on="COUNTRY", how="left")
+    summary["TOTAL_KIDNEYS_TRANSPLANTED"] = summary["TOTAL_KIDNEYS_TRANSPLANTED"].fillna(0).astype(int)
+
+    
     # -----------------------------
     # 7. City-to-city international flows (optional)
     # -----------------------------
