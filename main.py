@@ -15,9 +15,16 @@ from collections import defaultdict
 from agents.hospital import *
 from visualizer.heatmap import *
 from utils.aux_functions import *
+from visualizer.implementation_stats import *
+
 sys.path.append(os.path.abspath(os.path.dirname(__file__)))
 from utils.check_distributions import *
 logger = get_matching_logger()
+
+
+
+
+
 #donor_generator.generate_donor(10, 1, 10)
 #recipient_generator.generate_recipient(40, 1, 10)
 
@@ -113,6 +120,7 @@ df = pd.read_csv(match_file)
 check_priority_groups(df).to_csv("priority_summary.csv")
 
 summarize_organ_flows_countries(csv_path=match_file)
+calculate_implementation_stats(csv_path=match_file)
 summary_file= get_summary_file(match_file)
 #print(summary_file)
 plot_transfer_heatmap(summary_file)
