@@ -155,18 +155,12 @@ def _abo_HLA_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[
 
 
 def _sctp(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],local,verbose=False,  **kwargs):
-    if local:
-        
-        #Call the local allocation function here
-        scandiatransplant, log_path= local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
-    else:
-        scandiatransplant, log_path= sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
+
+    scandiatransplant, log_path= sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
     
     return scandiatransplant, log_path if 'log_path' in locals() else None
 
-#TODO pass recipient_row as df
-#TODO add payback rules
-#TODO log matches, log which priority group was used
+
 
 def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose= False,  **kwargs):
     log_path= None
@@ -195,8 +189,7 @@ def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp,
             return scandiatransplant, None
         #++++++++++
 
-        if not organ.exchange_obligation:
-            continue
+
         if len(recipient_df) == 0:
             print("Not enough recipients left to match this organ.")
             break

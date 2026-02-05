@@ -30,7 +30,7 @@ logger = get_matching_logger()
 
 print("Initialize matching module")
 # LOAD SCENARIOS
-scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\advanced_scenario.json")
+scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\optimize_both_to_exchange.json")
 
 
 #for country in scandiatransplant.member_countries:
@@ -85,7 +85,7 @@ for t in timesteps_to_process:
 
     #scandiatransplant.print()
     #Match the local waiting list
-    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,True,"sctp", False)
+    #scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,True,"sctp", False)
 
     #Match the Scandiatransplant waiting list
 

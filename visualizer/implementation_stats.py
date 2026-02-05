@@ -118,7 +118,7 @@ def calculate_implementation_stats(csv_path, output_dir="logs/stats"):
         for col in display_df.select_dtypes(include=["float", "float64", "int"]).columns:
             display_df[col] = display_df[col].round(6)
         print("Equity coefficient table (top rows):")
-        print(display_df.head().to_string(index=False))
+        print(display_df.head(10).to_string(index=False))
     else:
         print("Equity coefficient table is empty.\n")
 
