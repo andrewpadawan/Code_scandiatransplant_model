@@ -220,6 +220,7 @@ def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp,
                 AllocationPriority.PRIORITY_3,
                 AllocationPriority.PRIORITY_4,
                 AllocationPriority.PRIORITY_5,
+                AllocationPriority.PRIORITY_7
             ):
                 log_debt_payback_ABO_age(matched_recipient, organ)
 

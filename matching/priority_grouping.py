@@ -52,11 +52,13 @@ def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplan
         return payback_recipient_df, AllocationPriority.PAYBACK
     
     # LAMP AND LOCAL LIST
+    """
     priority_6= check_priority_6(recipient_df, organ, verbose)
     if not priority_6.empty:
         ordered_priority_6= ordering_priority_2_to_7(priority_6, organ,timestep,verbose)
         print("Priority 6")
         return ordered_priority_6, AllocationPriority.PRIORITY_6
+    """
     priority_7= check_priority_7(recipient_df, organ, verbose)
     if not priority_7.empty:
         ordered_priority_7= ordering_priority_2_to_7(priority_7,organ,timestep,verbose)
@@ -346,7 +348,7 @@ def check_priority_7(recipient_df, organ, verbose):
         print("For priority 7")
 # THIS IS ONE THE PROCUREMENTE CENTER'S OWN WAITING LIST
     organ_location= organ.city
-    local_recipient_df = recipient_df[recipient_df["CITY"] == organ_location]
+    local_recipient_df = recipient_df #changed so that the whole Scandiatransplant waiting list is considered
 
     valid_indices = []
     for idx, recipient_row in local_recipient_df.iterrows():

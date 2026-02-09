@@ -30,7 +30,7 @@ logger = get_matching_logger()
 
 print("Initialize matching module")
 # LOAD SCENARIOS
-scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\advanced_scenario.json")
+scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\opt_sctp_waitlist.json")
 
 
 #for country in scandiatransplant.member_countries:

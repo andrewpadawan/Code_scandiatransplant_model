@@ -161,7 +161,7 @@ def calculate_distance_travelled_incl_local(df):
 def calculate_distance_travelled(df):
     allowed_groups = {
         "AllocationPriority.PRIORITY_1", "AllocationPriority.PRIORITY_2", "AllocationPriority.PRIORITY_3",
-        "AllocationPriority.PRIORITY_4", "AllocationPriority.PRIORITY_5", "AllocationPriority.PAYBACK", "AllocationPriority.SURPLUS"
+        "AllocationPriority.PRIORITY_4", "AllocationPriority.PRIORITY_5", "AllocationPriority.PRIORITY_7","AllocationPriority.PAYBACK", "AllocationPriority.SURPLUS"
     }
 
     distances = []
