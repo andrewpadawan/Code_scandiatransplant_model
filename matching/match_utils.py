@@ -329,6 +329,8 @@ def is_same_country(recipient_row, organ):
 
 
 def count_mismatches(donor_alleles, recipient_alleles):
+    print("counting mismatches")
+    
     donor_counts = Counter(donor_alleles)
     recipient_counts = Counter(recipient_alleles)
     mismatches = 0

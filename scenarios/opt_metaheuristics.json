@@ -1,0 +1,17 @@
+{
+  "hospital": [
+    {"city": "Copenhagen"},
+    {"city": "Aarhus"},
+    {"city": "Odense"},
+    {"city": "Skane"},
+    {"city": "Gothenburg"},
+    {"city": "Stockholm"},
+    {"city": "Uppsala"},
+    {"city": "Oslo"},
+    {"city": "Reykjavik"},
+    {"city": "Helsinki"},
+    {"city": "Tartu"}
+  ],
+"donor_list": "C:\\Users\\reddr\\OneDrive\\Andrea\\Master in Computer Science and Engineering\\Thesis\\Code\\Scandiatransplant_modelling\\testing_files\\validation_data\\SIM_2\\advanced_donor.csv",
+"recipient_list": "C:\\Users\\reddr\\OneDrive\\Andrea\\Master in Computer Science and Engineering\\Thesis\\Code\\Scandiatransplant_modelling\\testing_files\\validation_data\\SIM_2\\advanced_recipient.csv"
+}

@@ -30,7 +30,7 @@ logger = get_matching_logger()
 
 print("Initialize matching module")
 # LOAD SCENARIOS
-scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\opt_sctp_waitlist.json")
+scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\opt_metaheuristics.json")
 
 
 #for country in scandiatransplant.member_countries:
@@ -55,7 +55,7 @@ log_timestamp= datetime.now().strftime("%Y%m%d_%H%M%S")
 
 # Loop through timesteps starting from 1
 for t in timesteps_to_process:
-    print("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||")
+    
     print("In timestep:" + str(t))
     
     log_timestep(logger, t)

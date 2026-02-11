@@ -273,7 +273,7 @@ def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp
         #----
         if organ.exchange_obligation:
             continue
-        print("Allocating organ locally")
+        #print("Allocating organ locally")
         #Call the function that makes the matching, it will return a single row df
         matched_recipient_df, priority_level_assigned= local_cascading_priority_allocation(local_recipient_df, organ, timestep, verbose)
         
@@ -286,7 +286,7 @@ def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp
 
         #If no match is found at local level, national is searched *************************************
         if search_national:
-            print("Allocating organ nationally")
+            #print("Allocating organ nationally")
             national_recipient_df= recipient_df[recipient_df["COUNTRY"]==organ.country]
         #Call the function that makes the matching, it will return a single row df
             matched_recipient_df, priority_level_assigned= local_cascading_priority_allocation(national_recipient_df, organ, timestep, verbose)
@@ -298,8 +298,8 @@ def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp
                 surplus= True
         
         if surplus:
-            #TODO
-            print("Local surplus")
+            
+            #print("Local surplus")
             matched_recipient_df, priority_level_assigned= handle_surplus_organs(recipient_df, organ, timestep,scandiatransplant, verbose)
             if not matched_recipient_df.empty:
                 matched_recipient = matched_recipient_df.iloc[[0]]

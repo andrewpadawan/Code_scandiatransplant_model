@@ -44,7 +44,20 @@ city_pop= {
     "Helsinki": 5650325,
     "Tartu": 1369995
 } 
-
+city_pop_proportion={
+    "Aarhus": 5.055,
+    "Copenhagen": 7.459,
+    "Odense": 3.187,
+    "Skane": 5.136,
+    "Gothenburg": 10.271,
+    "Stockholm": 6.419,
+    "Uppsala": 5.392,
+    "Oslo": 14.397,
+    "Reykjavik": 1.000,
+    "Helsinki": 14.509,
+    "Tartu": 3.518
+    
+}
 # Static city coordinates (longitude, latitude)
 CITY_COORDS_LONG_LAT = {
     "Aarhus": (56.1629, 10.2039),

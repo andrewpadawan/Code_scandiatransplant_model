@@ -13,9 +13,6 @@ import os
 import re
 import pandas as pd
 
-import os
-import re
-import pandas as pd
 
 def calculate_implementation_stats(csv_path, output_dir="logs/stats"):
     # Load the main matching file
