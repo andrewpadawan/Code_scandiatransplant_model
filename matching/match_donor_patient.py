@@ -265,9 +265,17 @@ def local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp
         #----
         if organ.exchange_obligation:
             continue
-        print("Allocating organ locally")
-        #Call the function that makes the matching, it will return a single row df
-        matched_recipient_df, priority_level_assigned= local_cascading_priority_allocation(local_recipient_df, organ, timestep, verbose)
+        
+
+        payback_recipient_df= pay_back_abo_age_payback(recipient_df, organ, timestep, verbose)
+        if not payback_recipient_df.empty:
+            # this functions calles local_cascading_priority_allocation which returns already ordered match list ordered_payback= ordering_priority_2_to_7(payback_recipient_df,organ, timestep,verbose)
+            matched_recipient_df, priority_level_assigned= payback_recipient_df, AllocationPriority.PAYBACK
+            print("Payback from the local entrypoint")
+        else:
+            print("Allocating organ locally")
+            #Call the function that makes the matching, it will return a single row df
+            matched_recipient_df, priority_level_assigned= local_cascading_priority_allocation(local_recipient_df, organ, timestep, verbose)
         
         if not matched_recipient_df.empty:
             matched_recipient = matched_recipient_df.iloc[[0]]

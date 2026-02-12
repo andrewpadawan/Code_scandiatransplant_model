@@ -1,0 +1,7 @@
+COUNTRY,ORGAN_TYPE,NUM_IMPORTED,NUM_EXPORTED,NET_FLOW,TOTAL_KIDNEYS_TRANSPLANTED
+Denmark,Kidney,28,25,3,239
+Norway,Kidney,15,15,0,218
+Finland,Kidney,13,17,-4,212
+Sweden,Kidney,29,26,3,375
+Estonia,Kidney,7,7,0,44
+Iceland,Kidney,1,3,-2,12
