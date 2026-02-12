@@ -97,10 +97,10 @@ summary_file= get_summary_file(match_file)"""
 #plot_mismatch_histograms(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\logs\csv_logs\matching_20260211_111305.csv")
 #plot_hla_allele_frequencies(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\testing_files\advanced_recipient.csv")
 
-count_mismatches("['A69', 'A74']", "['A1', 'A9']", True)
+#count_mismatches("['A69', 'A74']", "['A1', 'A9']", True)
 
 
-match_file= r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\logs\csv_logs\matching_20260212_140051.csv"
+match_file= r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\testing_files\validation_data\SIM_5\matching_20260212_145444.csv"
 #plot_mismatch_histograms(match_file)
 
 
@@ -108,9 +108,9 @@ df = pd.read_csv(match_file)
 
 check_priority_groups(df).to_csv("priority_summary.csv")
 
-summarize_organ_flows_countries(csv_path=match_file)
-calculate_implementation_stats(csv_path=match_file)
-summary_file= get_summary_file(match_file)
+#summarize_organ_flows_countries(csv_path=match_file)
+#calculate_implementation_stats(csv_path=match_file)
+#summary_file= get_summary_file(match_file)
 #print(summary_file)
-plot_transfer_heatmap(summary_file)
+#plot_transfer_heatmap(summary_file)
 
