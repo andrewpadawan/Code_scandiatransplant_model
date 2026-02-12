@@ -32,11 +32,13 @@ from visualizer.heatmap import *
 from visualizer.summary import *
 from utils.aux_functions import *
 
+from matching.match_utils import *
+from visualizer.implementation_stats import *
 #organ_flows= pd.read_csv(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs")
 
-donor_generator.generate_donor(550, 1, 365, r"testing_files/advanced_donor.csv")
+#donor_generator.generate_donor(550, 1, 365, r"testing_files/advanced_donor.csv")
 #recipient_generator.generate_recipient(10, 1, 1, r"testing_files/advanced_recipient.csv")
-recipient_generator.generate_recipient(3394, 1, 365, r"testing_files/advanced_recipient.csv")
+#recipient_generator.generate_recipient(3394, 1, 365, r"testing_files/advanced_recipient.csv")
 
 #check_age_distribution_by_groups_donors("testing_files/intermediate_donor.csv")
 #check_hla_distributions("testing_files/intermediate_donor.csv")
@@ -91,3 +93,24 @@ match_file= r"logs/csv_logs/matching_20260110_190436.csv"
 match_file= r"matching_20260116_155953.csv"
 summarize_organ_flows_countries(csv_path=match_file)
 summary_file= get_summary_file(match_file)"""
+
+#plot_mismatch_histograms(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\logs\csv_logs\matching_20260211_111305.csv")
+#plot_hla_allele_frequencies(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\testing_files\advanced_recipient.csv")
+
+count_mismatches("['A69', 'A74']", "['A1', 'A9']", True)
+
+
+match_file= r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\logs\csv_logs\matching_20260212_140051.csv"
+#plot_mismatch_histograms(match_file)
+
+
+df = pd.read_csv(match_file)
+
+check_priority_groups(df).to_csv("priority_summary.csv")
+
+summarize_organ_flows_countries(csv_path=match_file)
+calculate_implementation_stats(csv_path=match_file)
+summary_file= get_summary_file(match_file)
+#print(summary_file)
+plot_transfer_heatmap(summary_file)
+
