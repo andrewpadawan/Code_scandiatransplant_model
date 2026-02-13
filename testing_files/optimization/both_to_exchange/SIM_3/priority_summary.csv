@@ -1,4 +1,4 @@
-EXCHANGE_OBLIGATION,AllocationPriority.PAYBACK,AllocationPriority.PRIORITY_1,AllocationPriority.PRIORITY_3,AllocationPriority.PRIORITY_4,AllocationPriority.PRIORITY_5,AllocationPriority.PRIORITY_6,AllocationPriority.PRIORITY_7,AllocationPriority.SURPLUS
-False,40,5,14,6,9,26,449,1
-True,78,11,55,14,17,20,354,1
-TOTAL,118,16,69,20,26,46,803,2
+EXCHANGE_OBLIGATION,AllocationPriority.LOCAL,AllocationPriority.PAYBACK,AllocationPriority.PRIORITY_1,AllocationPriority.PRIORITY_2,AllocationPriority.PRIORITY_3,AllocationPriority.PRIORITY_4,AllocationPriority.PRIORITY_5,AllocationPriority.PRIORITY_6,AllocationPriority.PRIORITY_7,AllocationPriority.SURPLUS
+False,0,22,3,0,5,6,4,14,495,1
+True,0,55,12,0,30,14,12,25,401,1
+TOTAL,0,77,15,0,35,20,16,39,896,2
