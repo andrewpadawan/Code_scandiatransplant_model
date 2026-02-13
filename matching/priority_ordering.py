@@ -136,9 +136,9 @@ def ordering_priority_2_to_7(recipient_df, organ: Organ, timestep, verbose=False
     b_mismatches = []
 
     for _, row in priority_df.iterrows():
-        dr_mismatches.append(count_mismatches(organ.geno_HLA_DRB1, row["Genomic_HLA-DRB1"]))
-        a_mismatches.append(count_mismatches(organ.geno_HLA_A, row["Genomic_HLA-A"]))
-        b_mismatches.append(count_mismatches(organ.geno_HLA_B, row["Genomic_HLA-B"]))
+        dr_mismatches.append(count_mismatches(organ.sero_HLA_DRB1, row["Serologic_HLA-DRB1"]))
+        a_mismatches.append(count_mismatches(organ.sero_HLA_A, row["Serologic_HLA-A"]))
+        b_mismatches.append(count_mismatches(organ.sero_HLA_B, row["Serologic_HLA-B"]))
 
     priority_df = priority_df.copy()
     priority_df["DRB1_mismatches"] = dr_mismatches

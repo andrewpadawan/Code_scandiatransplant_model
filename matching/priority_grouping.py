@@ -114,7 +114,7 @@ def local_cascading_priority_allocation(recipient_df, organ, timestep, verbose= 
     matched_locally= match_compatible(recipient_df, organ, verbose)
     if not matched_locally.empty:
         ordered_matched_locally= ordering_priority_2_to_7(matched_locally,organ,timestep,verbose)
-        print("Matched locally no priority")
+        #print("Matched locally no priority")
         return ordered_matched_locally, AllocationPriority.LOCAL
     
     #surplus organs handled by the function that calls this one
@@ -125,7 +125,7 @@ def local_cascading_priority_allocation(recipient_df, organ, timestep, verbose= 
 #...................................................................
 
 def handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, verbose):
-    #print("Handling surplus organ")
+    print("Handling surplus organ")
     
     offering_center= organ.city
     rota_list = scandiatransplant.rota
@@ -217,7 +217,7 @@ def check_priority_2(recipient_df, organ, verbose):
             print("cPRA check passed by "+ str(idx))
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
-        compatible_df = filter_HLA_A_B_DRB1_BW4_6_compatible(organ, recipient_one_df)
+        compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
 
         if compatible_df.empty:
             continue
@@ -244,7 +244,7 @@ def check_priority_3(recipient_df, organ, verbose):
 
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
-        compatible_df = filter_HLA_A_B_DRB1_BW4_6_compatible(organ, recipient_one_df)
+        compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
         #compatible_df=recipient_df[0:0]
         if compatible_df.empty:
             continue
@@ -299,7 +299,7 @@ def check_priority_5(recipient_df, organ,verbose ):
 
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
-        compatible_df = filter_HLA_A_B_DRB1_BW4_6_compatible(organ, recipient_one_df)
+        compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
 
         if compatible_df.empty:
             continue
@@ -354,7 +354,9 @@ def check_priority_7(recipient_df, organ, verbose):
     for idx, recipient_row in local_recipient_df.iterrows():
         if not is_ABO_compatible(recipient_row, organ):
             continue
-        
+        #A negative crossmatch means that that organ can be transplanted into the recipient, if posiitive they are incompatible
+        if virtual_crossmatch(recipient_row, organ):
+            continue
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
         #compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
@@ -376,7 +378,8 @@ def match_compatible(recipient_df, organ, verbose):
     for idx, recipient_row in recipient_df.iterrows():
         if not is_ABO_compatible(recipient_row, organ):
             continue
-        
+        if virtual_crossmatch(recipient_row, organ):
+            continue
         # Wrap row into one-row DataFrame for compatibility filter
         recipient_one_df = recipient_row.to_frame().T
         #compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)

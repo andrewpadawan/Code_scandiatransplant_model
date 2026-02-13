@@ -40,10 +40,27 @@ def calculate_implementation_stats(csv_path, output_dir="logs/stats"):
     (
         average_mismatches, total_mismatches,
         average_ab_mismatches, total_ab_mismatches,
-        average_drb1_mismatches, total_drb1_mismatches
+        average_drb1_mismatches, total_drb1_mismatches, total_mismatch_distribution,
+        ab_mismatch_distribution,
+        drb1_mismatch_distribution
     ) = calculate_mismatches(df)
 
     equity_coefficient_df, average_equity_coefficient = calculate_equity_coefficent(summary_df)
+
+    desired_order = [
+    "COUNTRY",
+    "ORGAN_TYPE",
+    "NUM_IMPORTED",
+    "NUM_EXPORTED",
+    "NET_FLOW",
+    "TOTAL_KIDNEYS_TRANSPLANTED",
+    "equity_coeff"
+    ]
+
+# Reorder only if all columns exist
+    existing_cols = [c for c in desired_order if c in equity_coefficient_df.columns]
+    equity_coefficient_df = equity_coefficient_df[existing_cols]
+
 
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
@@ -65,7 +82,10 @@ def calculate_implementation_stats(csv_path, output_dir="logs/stats"):
         "average_mismatches_DRB1": average_drb1_mismatches,
         "total_mismatches_DRB1": total_drb1_mismatches,
         "average_equity_coefficient": average_equity_coefficient,
-        "equity_coefficients_csv": equity_path
+        "equity_coefficients_csv": equity_path,
+        "total_mismatch_distribution": total_mismatch_distribution,
+        "ab_mismatch_distribution" : ab_mismatch_distribution,
+        "drb1_mismatch_distribution": drb1_mismatch_distribution
     }
     stats_df = pd.DataFrame([stats_record])
 
@@ -111,6 +131,16 @@ def calculate_implementation_stats(csv_path, output_dir="logs/stats"):
     print(f"  Average equity coefficient: {fmt_num(average_equity_coefficient, 6)}")
     print(f"  Full equity table saved to: {equity_path}\n")
 
+    print("Total mismatch distribution: ")
+    print(total_mismatch_distribution)
+
+    print("AB mismatch distribution: ")
+    print(ab_mismatch_distribution)
+
+    print("DRB1 mismatch distribution: ")
+    print(drb1_mismatch_distribution)
+
+
     # Print a readable slice of the equity table
     if not equity_coefficient_df.empty:
         # Round numeric columns for display only
@@ -118,7 +148,7 @@ def calculate_implementation_stats(csv_path, output_dir="logs/stats"):
         for col in display_df.select_dtypes(include=["float", "float64", "int"]).columns:
             display_df[col] = display_df[col].round(6)
         print("Equity coefficient table (top rows):")
-        print(display_df.head().to_string(index=False))
+        print(display_df.head(10).to_string(index=False))
     else:
         print("Equity coefficient table is empty.\n")
 
@@ -176,7 +206,8 @@ def calculate_distance_travelled(df):
 
         # Skip if either city is missing from your lookup
         if donor_city not in CITY_COORDS_LONG_LAT or recipient_city not in CITY_COORDS_LONG_LAT:
-            continue
+            raise 
+            
 
         lat1, lon1 = CITY_COORDS_LONG_LAT[donor_city]
         lat2, lon2 = CITY_COORDS_LONG_LAT[recipient_city]
@@ -216,38 +247,25 @@ def calculate_mismatches(df):
     Returns:
       average_mismatches, total_mismatches,
       average_ab_mismatches, total_ab_mismatches,
-      average_drb1_mismatches, total_drb1_mismatches
-    Assumes count_mismatches(donor_alleles, recipient_alleles) exists and
-    returns an integer mismatch count for the provided allele lists.
+      average_drb1_mismatches, total_drb1_mismatches,
+      mismatch_distribution (dict: mismatch_count → frequency)
     """
-
-    donor_cols = [
-        "DONOR_Genomic_HLA-A",
-        "DONOR_Genomic_HLA-B",
-        "DONOR_Genomic_HLA-DRB1"
-    ]
-    recipient_cols = [
-        "RECIPIENT_Genomic_HLA-A",
-        "RECIPIENT_Genomic_HLA-B",
-        "RECIPIENT_Genomic_HLA-DRB1"
-    ]
 
     overall_values = []
     ab_values = []
     drb1_values = []
 
     for _, row in df.iterrows():
-        # Safely extract per-locus allele lists (treat missing as empty list)
-        donor_a = row.get("DONOR_Genomic_HLA-A") or []
-        donor_b = row.get("DONOR_Genomic_HLA-B") or []
-        donor_drb1 = row.get("DONOR_Genomic_HLA-DRB1") or []
+        # Extract donor/recipient allele lists (already parsed before this function)
+        donor_a = row.get("DONOR_Serologic_HLA-A")
+        donor_b = row.get("DONOR_Serologic_HLA-B")
+        donor_drb1 = row.get("DONOR_Serologic_HLA-DRB1") 
 
-        rec_a = row.get("RECIPIENT_Genomic_HLA-A") or []
-        rec_b = row.get("RECIPIENT_Genomic_HLA-B") or []
-        rec_drb1 = row.get("RECIPIENT_Genomic_HLA-DRB1") or []
+        rec_a = row.get("RECIPIENT_Serologic_HLA-A") 
+        rec_b = row.get("RECIPIENT_Serologic_HLA-B") 
+        rec_drb1 = row.get("RECIPIENT_Serologic_HLA-DRB1")
 
-        # Ensure lists (if stored as strings, you may need to parse them before calling this function)
-        # Compute mismatches per locus
+        # Compute mismatches
         mism_a = count_mismatches(donor_a, rec_a)
         mism_b = count_mismatches(donor_b, rec_b)
         mism_drb1 = count_mismatches(donor_drb1, rec_drb1)
@@ -261,7 +279,7 @@ def calculate_mismatches(df):
         ab_values.append(ab_row_mismatch)
         drb1_values.append(drb1_row_mismatch)
 
-    # Helper to compute average/total safely
+    # Helper to compute average + total
     def stats(values):
         if not values:
             return 0, 0
@@ -273,10 +291,35 @@ def calculate_mismatches(df):
     average_ab_mismatches, total_ab_mismatches = stats(ab_values)
     average_drb1_mismatches, total_drb1_mismatches = stats(drb1_values)
 
+    # ---------------------------------------------------------
+    # NEW: mismatch distribution based on actual data
+    # ---------------------------------------------------------
+    total_mismatch_distribution = (
+        pd.Series(overall_values)
+        .value_counts()
+        .sort_index()
+        .to_dict()
+    )
+    ab_mismatch_distribution = (
+        pd.Series(ab_values)
+        .value_counts()
+        .sort_index()
+        .to_dict()
+    )
+    drb1_mismatch_distribution = (
+        pd.Series(drb1_values)
+        .value_counts()
+        .sort_index()
+        .to_dict()
+    )
+
     return (
         average_mismatches, total_mismatches,
         average_ab_mismatches, total_ab_mismatches,
-        average_drb1_mismatches, total_drb1_mismatches
+        average_drb1_mismatches, total_drb1_mismatches,
+        total_mismatch_distribution,
+        ab_mismatch_distribution,
+        drb1_mismatch_distribution
     )
 
 

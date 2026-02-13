@@ -230,7 +230,6 @@ def summarize_organ_flows_countries(csv_path, output_dir="logs/summary_logs"):
     # 3. City → Country mapping
     # -----------------------------
     CITY_TO_COUNTRY = {
-
         "Aarhus": "Denmark",
         "Copenhagen": "Denmark",
         "Odense": "Denmark",
@@ -243,11 +242,12 @@ def summarize_organ_flows_countries(csv_path, output_dir="logs/summary_logs"):
         "Helsinki": "Finland",
         "Tartu": "Estonia"
     }
+
     df["DONOR_COUNTRY"] = df["DONOR_CITY"].map(CITY_TO_COUNTRY)
     df["RECIPIENT_COUNTRY"] = df["RECIPIENT_CITY"].map(CITY_TO_COUNTRY)
 
     df_all = df.copy()
-    # Warn if any cities are missing
+
     missing = df[df["DONOR_COUNTRY"].isna() | df["RECIPIENT_COUNTRY"].isna()]
     if not missing.empty:
         print("Warning: Some cities have no country mapping:")
@@ -280,8 +280,9 @@ def summarize_organ_flows_countries(csv_path, output_dir="logs/summary_logs"):
     # -----------------------------
     summary = pd.merge(exports, imports, on=["COUNTRY", "ORGAN_TYPE"], how="outer")
 
-    summary["NUM_EXPORTED"] = summary["NUM_EXPORTED"].fillna(0).astype(int)
     summary["NUM_IMPORTED"] = summary["NUM_IMPORTED"].fillna(0).astype(int)
+    summary["NUM_EXPORTED"] = summary["NUM_EXPORTED"].fillna(0).astype(int)
+
     summary["NET_FLOW"] = summary["NUM_IMPORTED"] - summary["NUM_EXPORTED"]
 
     # -----------------------------
@@ -295,13 +296,45 @@ def summarize_organ_flows_countries(csv_path, output_dir="logs/summary_logs"):
         .rename(columns={"RECIPIENT_COUNTRY": "COUNTRY"})
     )
 
-
     summary = pd.merge(summary, kidney_counts, on="COUNTRY", how="left")
     summary["TOTAL_KIDNEYS_TRANSPLANTED"] = summary["TOTAL_KIDNEYS_TRANSPLANTED"].fillna(0).astype(int)
-
-    
     # -----------------------------
-    # 7. City-to-city international flows (optional)
+    # Reorder columns: imported before exported
+    # -----------------------------
+    desired_col_order = [
+        "COUNTRY",
+        "ORGAN_TYPE",
+        "NUM_IMPORTED",
+        "NUM_EXPORTED",
+        "NET_FLOW",
+        "TOTAL_KIDNEYS_TRANSPLANTED"
+    ]
+
+# Keep only columns that exist (robust to missing fields)
+    summary = summary[[col for col in desired_col_order if col in summary.columns]]
+
+    # -----------------------------
+    # 7. Apply custom country ordering
+    # -----------------------------
+    desired_order = [
+        "Denmark",
+        "Norway",
+        "Finland",
+        "Sweden",
+        "Estonia",
+        "Iceland"
+    ]
+
+    summary["COUNTRY"] = pd.Categorical(
+        summary["COUNTRY"],
+        categories=desired_order,
+        ordered=True
+    )
+
+    summary = summary.sort_values("COUNTRY")
+
+    # -----------------------------
+    # 8. City-to-city international flows
     # -----------------------------
     city_pair_counts = (
         df.groupby(["DONOR_CITY", "RECIPIENT_CITY", "ORGAN_TYPE"])
@@ -310,13 +343,13 @@ def summarize_organ_flows_countries(csv_path, output_dir="logs/summary_logs"):
     )
 
     # -----------------------------
-    # 8. Extract timestamp tag
+    # 9. Extract timestamp tag
     # -----------------------------
     match = re.search(r"(matching_\d{8}_\d{6})", os.path.basename(csv_path))
     tag = match.group(1) if match else "summary"
 
     # -----------------------------
-    # 9. Save outputs
+    # 10. Save outputs
     # -----------------------------
     os.makedirs(output_dir, exist_ok=True)
 
@@ -327,7 +360,7 @@ def summarize_organ_flows_countries(csv_path, output_dir="logs/summary_logs"):
     city_pair_counts.to_csv(flow_path, index=False)
 
     # -----------------------------
-    # 10. Return results
+    # 11. Return results
     # -----------------------------
     return {
         "summary_table": summary,
