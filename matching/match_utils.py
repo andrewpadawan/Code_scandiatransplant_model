@@ -6,6 +6,9 @@ from agents.hospital import *
 import random
 import numpy as np
 from collections import Counter
+
+import ast
+from patient_generators.generating_constants import *
 abo_compatibility = {
     "O": ["O", "A", "B", "AB"],
     "A": ["A", "AB"],
@@ -48,39 +51,43 @@ def filter_priority_4_compatible(organ:Organ, recipient_df, verbose):
     valid_indices_DRB1= []
     valid_indices= []
     # if there is HLA-DRB1 compatibility and in addition not more than 2 HLA-A, B mismatches. 
-    donor_DRB1_set = set(organ.sero_HLA_DRB1)
+    
     # Filter recipients: DRB1 compatible, so no mismatches
     for idx, recipient_row in under_16.iterrows(): 
 
-        recipient_alleles = (recipient_row["Serologic_HLA-DRB1"] ) 
-        recipient_set = set(recipient_alleles)
-
-        # Check compatibility: donor must be subset of recipient 
-        if donor_DRB1_set.issubset(recipient_set): 
+        dr_mismatches= count_mismatches(organ.sero_HLA_DRB1, recipient_row["Serologic_HLA-DRB1"])
+        if dr_mismatches== 0:
             valid_indices_DRB1.append(idx)
+        
 
     compatible_DRB1_df= under_16.loc[valid_indices_DRB1]
-    organ_hla_a_set= set(organ.geno_HLA_A)
-    organ_hla_b_set= set(organ.geno_HLA_B)
+
     #calculate mismatches (no more than 2 in HLA A and B)
     for idx, recipient_row in compatible_DRB1_df.iterrows(): 
 
-        recipient_hla_a_set= set(recipient_row["Genomic_HLA-A"])
-        a_mismatch= len(organ_hla_a_set-recipient_hla_a_set)
+        a_mismatch= count_mismatches(organ.sero_HLA_A, recipient_row["Serologic_HLA-A"])
+        b_mismatch= count_mismatches(organ.sero_HLA_B, recipient_row["Serologic_HLA-B"])
 
-        recipient_hla_b_set= set(recipient_row["Genomic_HLA-B"])
-        b_mismatch= len(organ_hla_b_set-recipient_hla_b_set)
-
-        if a_mismatch + b_mismatch >2:
+        if a_mismatch + b_mismatch > 2:
             continue
 
         valid_indices.append(idx)
 
     # Return a DataFrame of all valid recipients
-    return recipient_df.loc[valid_indices]
+    return compatible_DRB1_df.loc[valid_indices]
 
-def filter_HLA_priority_1(organ:Organ, recipient_df):
-    donor_alleles = [
+
+
+def parse_list(x):
+    if isinstance(x, list):
+        return x
+    if isinstance(x, str):
+        return ast.literal_eval(x)
+    return []
+
+
+def filter_HLA_priority_1(organ:Organ, recipient_df, verbose= False):
+    donor_alleles_raw = [
         organ.geno_HLA_A,
         organ.geno_HLA_B,
         organ.geno_HLA_C,
@@ -90,16 +97,28 @@ def filter_HLA_priority_1(organ:Organ, recipient_df):
         organ.geno_HLA_DPA1,
         organ.geno_HLA_DPB1,
     ]
-
+    # Flatten into a single list of alleles 
+    donor_alleles = [] 
+    for item in donor_alleles_raw:
+        donor_alleles.extend(parse_list(item))
+    if verbose:
+        print("!!!!!!!!!!!!!!!!HLA priority 1 filtering")
+        print(donor_alleles)
+        print(type(donor_alleles))
+        print(donor_alleles[0])
     # Filter recipients: compatible if none of the donor alleles are in their antibody list
-    mask = recipient_df["HLA_antibodies"].apply(
-    lambda antibodies: not any(a in donor_alleles for a in antibodies)
-)
+    recipient_df["HLA_antibodies"] = recipient_df["HLA_antibodies"].apply(parse_list)
 
+    mask = recipient_df["HLA_antibodies"].apply(
+    lambda antibodies: not any(a in donor_alleles for a in antibodies))
+
+    if verbose:
+        print(mask)
     filtered_df = recipient_df[mask]
 
-    compatible_df= sample_rows(filtered_df)
-    return compatible_df
+    #compatible_df= sample_rows(filtered_df)
+    
+    return filtered_df
 """
 def filter_HLA_A_B_DRB1_BW4_6_compatible(organ:Organ, recipient_df):
     donor_alleles = (
@@ -128,35 +147,30 @@ def filter_HLA_A_B_DRB1_BW4_6_compatible(organ:Organ, recipient_df):
     # Return a DataFrame of all valid recipients
     return recipient_df.loc[valid_indices]"""
     
-def filter_HLA_A_B_DRB1_BW4_6_compatible(organ:Organ, recipient_df):
-    donor_alleles = (
-        organ.sero_HLA_A +
-        organ.sero_HLA_B +
-        organ.sero_HLA_DRB1)
-    
-    valid_indices= []
-    organ_hla_set= set(donor_alleles)
+def filter_HLA_A_B_DRB1_compatible(organ:Organ, recipient_df):
 
+    valid_indices= []
+    
 
     for idx, recipient_row in recipient_df.iterrows():
-        recipient_alleles = (
-            recipient_row["Serologic_HLA-A"] +
-            recipient_row["Serologic_HLA-B"] +
-            recipient_row["Serologic_HLA-DRB1"]
-        )
 
-        donor_alleles = (
-            organ.sero_HLA_A +
-            organ.sero_HLA_B +
-            organ.sero_HLA_DRB1
-        )
+        mismatches_a = count_mismatches(organ.sero_HLA_A, recipient_row["Serologic_HLA-A"])
+        mismatches_b = count_mismatches(organ.sero_HLA_B, recipient_row["Serologic_HLA-B"])
+        mismatches_dr = count_mismatches(organ.sero_HLA_DRB1, recipient_row["Serologic_HLA-DRB1"])
+        mismatches= mismatches_a + mismatches_b+ mismatches_dr
 
-        mismatches = count_mismatches(donor_alleles, recipient_alleles)
         if mismatches > 0:
             continue
+        
+        """
+        print("CHECKING BW4/BW6")
+        print(organ.bw4_6)
+        print(type(organ.bw4_6))
+        print(recipient_row["Calculated Bw4/BW6"])
+        print(type(recipient_row["Calculated Bw4/BW6"]))"""
 
-        if organ.bw4_6 != recipient_row["Calculated Bw4/BW6"]:
-            continue
+        #if organ.bw4_6 != recipient_row["Calculated Bw4/BW6"]:
+            #continue
 
         valid_indices.append(idx)
 
@@ -328,13 +342,159 @@ def is_same_country(recipient_row, organ):
 
 
 
-def count_mismatches(donor_alleles, recipient_alleles):
-    print("counting mismatches")
-    
+"""def count_mismatches(donor_alleles, recipient_alleles):
+
     donor_counts = Counter(donor_alleles)
     recipient_counts = Counter(recipient_alleles)
     mismatches = 0
     for allele, d_count in donor_counts.items():
         r_count = recipient_counts.get(allele, 0)
         mismatches += max(d_count - r_count, 0)
+    return mismatches"""
+
+"""
+def count_mismatches(donor_alleles, recipient_alleles, verbose= False):
+    if verbose:
+        print("input")
+        print(donor_alleles)
+        print(type(donor_alleles))
+        print(recipient_alleles)
+        print(type(recipient_alleles))
+    # Convert string inputs into real lists
+
+    if isinstance(donor_alleles, str):
+        donor_alleles = ast.literal_eval(donor_alleles)
+    if isinstance(recipient_alleles, str):
+        recipient_alleles = ast.literal_eval(recipient_alleles)
+
+    if verbose:
+        print("cleaned")
+        print(donor_alleles)
+        print(type(donor_alleles))
+        print(recipient_alleles)
+        print(type(recipient_alleles))
+
+    donor_counts = Counter(donor_alleles)
+    recipient_counts = Counter(recipient_alleles)
+
+    if verbose:
+        print("Donor counts")
+        print(donor_counts)
+        print("Recipient counts")
+        print(recipient_counts)
+
+    mismatches = 0
+    for allele, d_count in donor_counts.items():
+        r_count = recipient_counts.get(allele, 0)
+        mismatches += max(d_count - r_count, 0)
+
+    if verbose:
+        print("Num mismatches")
+        print(mismatches)
+        
+    return mismatches"""
+
+
+"""def count_mismatches(donor_alleles, recipient_alleles, verbose=False):
+    # Parse stringified lists safely
+    donor = parse_serologic_list(donor_alleles)
+    recipient = parse_serologic_list(recipient_alleles)
+
+    # Convert to sets so duplicates don't matter
+    donor_set = set(donor)
+    recipient_set = set(recipient)
+
+    # Count donor antigens that the recipient does NOT have
+    mismatches = sum(1 for a in donor_set if a not in recipient_set)
+
+    if verbose:
+        print("Donor:", donor_set)
+        print("Recipient:", recipient_set)
+        print("Mismatches:", mismatches)
+
+    return mismatches"""
+    
+
+def count_mismatches(donor_alleles, recipient_alleles, verbose= False):
+    donor = parse_serologic_list(donor_alleles)
+    recipient = parse_serologic_list(recipient_alleles)
+
+    if verbose:
+        print("Donor:", donor)
+        print(type(donor))
+        print("Recipient:", recipient)
+        print(type(recipient))
+
+    mismatches = 0
+    for a in donor:
+        if verbose:
+            print(a)
+        if a not in recipient:
+            mismatches += 1
+    if verbose:
+        print("Mismatches:", mismatches)
+
     return mismatches
+
+
+
+def parse_serologic_list(x):
+    if isinstance(x, list):
+        return x
+    if isinstance(x, str):
+        x = x.strip().strip("[]")
+        parts = [p.strip().strip("'").strip('"') for p in x.split(",")]
+        return [p for p in parts if p]
+    return []
+
+
+
+def virtual_crossmatch(recipient_row, organ, verbose= False):
+    donor_alleles_raw = [
+        organ.geno_HLA_A,
+        organ.geno_HLA_B,
+        organ.geno_HLA_C,
+        organ.geno_HLA_DRB1,
+        organ.geno_HLA_DQA1,
+        organ.geno_HLA_DQB1,
+        organ.geno_HLA_DPA1,
+        organ.geno_HLA_DPB1,
+    ]
+
+    # Flatten into a single list of alleles 
+    donor_alleles = [] 
+    for item in donor_alleles_raw:
+        donor_alleles.extend(parse_list(item))
+
+    if verbose:
+        print("!!!!!!!!!!!!!!!!HLA VIRTUAL CROSSMATCH")
+        print(donor_alleles)
+        print(type(donor_alleles))
+        
+    # Filter recipients: compatible if none of the donor alleles are in their antibody list
+    recipient_antibodies = parse_list(recipient_row["HLA_antibodies"])
+    #TRanslate to sero
+    sero_recipient_antibodies= translate_lowres_to_serologic(recipient_antibodies, hla_to_serologic)
+
+    if verbose: 
+        print("Recipient antibodies geno:", recipient_antibodies)
+        print("Recipient antibodies sero:", sero_recipient_antibodies)
+
+    #positive crossmatch if any antibody matches any donor allele 
+    positive = any(a in donor_alleles for a in sero_recipient_antibodies)
+
+    if verbose: 
+        print("Virtual crossmatch positive?" , positive) 
+        
+    return positive
+
+
+def translate_lowres_to_serologic(allele_list, mapping):
+    sero_list = []
+
+    for allele in allele_list:
+        gene = allele.split("*")[0]   # e.g. "A*02" → "A"
+        sero = mapping.get(gene, {}).get(allele)
+        sero_list.append(sero)
+
+    return sero_list
