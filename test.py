@@ -100,18 +100,17 @@ summary_file= get_summary_file(match_file)"""
 #count_mismatches("['A69', 'A74']", "['A1', 'A9']", True)
 
 
-match_file= r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\testing_files\optimization\sctp_waitlist_payback\SIM_1\matching_20260213_111947.csv"
-#plot_mismatch_histograms(match_file)
+match_file= r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\testing_files\validation_data\SIM_1\matching_20260212_164920.csv"
 
 """
 df = pd.read_csv(match_file)
 
 check_priority_groups(df).to_csv("priority_summary.csv")"""
 
-#summarize_organ_flows_countries(csv_path=match_file)
+print(summarize_organ_flows_export_import(csv_path=match_file))
 #calculate_implementation_stats(csv_path=match_file)
 #summary_file= get_summary_file(match_file)
 #print(summary_file)
 #plot_transfer_heatmap(summary_file)
 
-animate_organ_flows(csv_path=match_file, shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
+#animate_organ_flows(csv_path=match_file, shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
