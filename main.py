@@ -113,6 +113,10 @@ for t in timesteps_to_process:
 #animate_organ_flows(csv_path=match_file, shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
 
 #plot_organ_flow_graph_on_map(csv_path=match_file)
+for hospital in Hospital.registry:
+    print(f"=== Exchange table for {hospital.city} ===")
+    print(hospital.organ_exchange_table.to_string(col_space=12))
+    print()
 
 
 df = pd.read_csv(match_file)
