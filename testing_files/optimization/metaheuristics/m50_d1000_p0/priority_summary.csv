@@ -1,4 +1,4 @@
 EXCHANGE_OBLIGATION,AllocationPriority.LOCAL,AllocationPriority.PAYBACK,AllocationPriority.PRIORITY_1,AllocationPriority.PRIORITY_2,AllocationPriority.PRIORITY_3,AllocationPriority.PRIORITY_4,AllocationPriority.PRIORITY_5,AllocationPriority.PRIORITY_6,AllocationPriority.PRIORITY_7,AllocationPriority.SURPLUS
-False,497,53,0,0,0,0,0,0,0,0
-True,0,7,11,1,30,15,8,4,474,0
-TOTAL,497,60,11,1,30,15,8,4,474,0
+False,221,329,0,0,0,0,0,0,0,0
+True,0,68,7,1,14,15,8,0,436,0
+TOTAL,221,397,7,1,14,15,8,0,436,0
