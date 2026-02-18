@@ -9,7 +9,7 @@ from matching.priority_enum import *
 import copy
 
 
-def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose):
+def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose, w_mismatch, w_distance,w_payback):
     #This function retunrs the chosen recipient (one recipient, in df form) or an empty df
     if verbose:
         print(f"Allocating organ {organ.organ_id} at Scandiatransplant level")
@@ -61,7 +61,7 @@ def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplan
     """
     priority_7= check_priority_7(recipient_df, organ, verbose)
     if not priority_7.empty:
-        ordered_priority_7= ordering_priority_7_metaheuristic(priority_7,organ,timestep)
+        ordered_priority_7= ordering_priority_7_metaheuristic(priority_7,organ,timestep, w_mismatch, w_distance,w_payback)
         #print("Priority 7")
         return ordered_priority_7, AllocationPriority.PRIORITY_7
     

@@ -119,7 +119,7 @@ def calculate_waited_months(recipient_row, timestep):
     return months_on_wl
 
 
-def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep,w_mismatch= 1.0,w_distance=1.0,w_payback=1.0, verbose=True):
+def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep,w_mismatch= 1.0,w_distance=1.0,w_payback=1.0, verbose=False):
 
     """After the exchange priority, the original list is sorted by:
     1. ABO identical
@@ -181,14 +181,14 @@ def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep,w_mis
         priority_df["Equity_scaled"] = equity_raw / float(max_abs)
     else:
         priority_df["Equity_scaled"] = 0.0
-    print("max_abs")
-    print(max_abs)
+    #print("max_abs")
+    #print(max_abs)
 
 
 
     equity_score= priority_df['Equity_scaled']
-    print("equity score")
-    print(equity_score)
+    #print("equity score")
+    #print(equity_score)
 
 # 5. Use these and their coefficient to calculate a score, rank by the score
      # scoring: choose coefficients; example weights
@@ -218,7 +218,7 @@ def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep,w_mis
     )
     
    
-    print(priority_df["Score"][0:10])
+    #print(priority_df["Score"][0:10])
     
 # 6. Sort by score 
     # Sort in descending order (highest score is best)
@@ -239,8 +239,8 @@ def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep,w_mis
     # If more than one row has the highest score, use RECIPIENTNUMBER for tiebreaker
     if len(highest_score_df) > 1:
         highest_score_df = highest_score_df.sort_values("RECIPIENTNUMBER", ascending=True)
-        print("selected highest score")
-    print(highest_score_df.head(5))
+        #print("selected highest score")
+    #print(highest_score_df.head(5))
     # Return the top option
     return highest_score_df.head(1)
 

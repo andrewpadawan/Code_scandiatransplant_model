@@ -13,7 +13,7 @@ def generate_recipient(total_samples, min_timestep, max_timestep, output_filepat
     recipient_ids= []
 
     # Make my pandas df
-    headers = ['RECIPIENTNUMBER', 'ABO_BLOOD_GROUP', 'RHESUS_CODE', 'ORGAN',"AGE","CITY", "COUNTRY","TIMESTEP_ENTERED","Genomic_HLA-A","Genomic_HLA-B","Genomic_HLA-C","Genomic_HLA-DRB1","Genomic_HLA-DQA1","Genomic_HLA-DQB1","Genomic_HLA-DPA1" ,"Genomic_HLA-DPB1","Serologic_HLA-A","Serologic_HLA-B","Serologic_HLA-C","Serologic_HLA-DRB1","Serologic_HLA-DQA1","Serologic_HLA-DQB1","Serologic_HLA-DPA1" ,"Serologic_HLA-DPB1", "Calculated Bw4/BW6", "HLA_antibodies", "cPRA", "TS", 'Notes', 'DRB1_mismatches','AB_mismatches']
+    headers = ['RECIPIENTNUMBER', 'ABO_BLOOD_GROUP', 'RHESUS_CODE', 'ORGAN',"AGE","CITY", "COUNTRY","TIMESTEP_ENTERED","Genomic_HLA-A","Genomic_HLA-B","Genomic_HLA-C","Genomic_HLA-DRB1","Genomic_HLA-DQA1","Genomic_HLA-DQB1","Genomic_HLA-DPA1" ,"Genomic_HLA-DPB1","Serologic_HLA-A","Serologic_HLA-B","Serologic_HLA-C","Serologic_HLA-DRB1","Serologic_HLA-DQA1","Serologic_HLA-DQB1","Serologic_HLA-DPA1" ,"Serologic_HLA-DPB1", "Calculated Bw4/BW6", "HLA_antibodies", "cPRA", "TS", 'Notes', 'DRB1_mismatches','AB_mismatches', "Total_mismatches", "Mismatch_score", "Distance","Distance_score", "Equity_score","Equity_scaled", "Score"]
     df = pd.DataFrame(columns=headers)
 
     for i in range(len(abo)):

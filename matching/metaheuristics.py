@@ -176,7 +176,8 @@ def calculate_equity_score(priority_df, organ):
 
     # Compute obligations
     organ_debts= all_organ_debts()
-    print(organ_debts.head())
+    #
+    #print(organ_debts.head())
 
     # Compute city-level equity scores
     equity_df = compute_city_equity_scores(organ_debts)

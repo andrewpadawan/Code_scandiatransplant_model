@@ -17,7 +17,7 @@ import pandas as pd
 def calculate_implementation_stats(csv_path, output_dir="logs/stats"):
     # Load the main matching file
     df = pd.read_csv(csv_path)
-
+    number_matches= len(df)
     # Extract the tag (matching_YYYYMMDD_HHMMSS)
     match = re.search(r"(matching_\d{8}_\d{6})", os.path.basename(csv_path))
     tag = match.group(1) if match else "stats"
@@ -154,7 +154,7 @@ def calculate_implementation_stats(csv_path, output_dir="logs/stats"):
     print("\n=== End Summary ===\n")
 
     # Return both paths for downstream use
-    return stats_path, equity_path
+    return number_matches, total_distance_travelled_incl_local, total_mismatches, average_equity_coefficient
 
 
 
