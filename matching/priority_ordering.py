@@ -197,7 +197,8 @@ def calculate_waited_months(recipient_row, timestep):
     return months_on_wl
 
 
-def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep, verbose=False):
+def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep,w_mismatch= 1.0,w_distance=1.0,w_payback=1.0, verbose=False):
+
     """After the exchange priority, the original list is sorted by:
     1. ABO identical
     2. Lowest DRB1 mismatches
@@ -206,6 +207,7 @@ def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep, verb
 
     New list:
     1. Use only ABO identical
+    ! Only is negative crossmatch
     2. Calculate all mismatches
     3. Calculate all distances
     4. calculate equity by means of payback debt
@@ -219,15 +221,21 @@ def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep, verb
 
     if len(priority_df) == 1:
         return priority_df
+# b) Only keep if negative crossmatch
+    negative_crossmatch_df = priority_df[ ~priority_df.apply(lambda row: virtual_crossmatch(row, organ), axis=1) ]
+    #IF NEGATIVEcrossmatch is empty so will be priority_df, function returns empty df
+    priority_df = negative_crossmatch_df 
 
+    if len(priority_df) == 1:
+        return priority_df
 # 2. Calculate all mismatches
     dr_mismatches = []
     a_mismatches = []
     b_mismatches = []
 
     for _, row in priority_df.iterrows():
-        print(type(row["Genomic_HLA-A"])) 
-        print(row["Genomic_HLA-A"])
+        #print(type(row["Genomic_HLA-A"])) 
+        #print(row["Genomic_HLA-A"])
         dr_mismatches.append(count_mismatches(organ.geno_HLA_DRB1, row["Genomic_HLA-DRB1"]))
         a_mismatches.append(count_mismatches(organ.geno_HLA_A, row["Genomic_HLA-A"]))
         b_mismatches.append(count_mismatches(organ.geno_HLA_B, row["Genomic_HLA-B"]))
@@ -244,28 +252,43 @@ def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep, verb
 
 # 4. calculate equity by means of payback debt
     priority_df=calculate_equity_score(priority_df, organ)
-
+    equity_score= priority_df['Equity']
 
 # 5. Use these and their coefficient to calculate a score, rank by the score
      # scoring: choose coefficients; example weights
-    w_mismatch = 1.0
-    w_distance = 1.0
-    w_payback = 1.0  # adjust or compute as needed
+     # adjust or compute as needed
 
     # ensure no-length mismatch
     assert len(priority_df) == len(priority_df["Total_mismatches"])
 
+    #mismatch score (1 if zero mismatches, 0 if 6 mismatches)
+    #print(type(priority_df["Total_mismatches"][0]))
+    mismatch_score= 1-(priority_df["Total_mismatches"]/6.0)
+    #print(mismatch_score)
+    #distance score (0 if max distance travelled, 0 if local) Max distance is Reykjavik to Tartu
+    max_distance= 5442.19
+    distance_score= 1- (priority_df["Distance"]/max_distance)
+
+
+
+
+
     # compute score, handling NaNs (treat NaN distance as large penalty)
     priority_df["Score"] = (
-        w_mismatch * priority_df["Total_mismatches"]
-        + w_distance * priority_df["Distance"]
-        + w_payback * priority_df["Equity"]
+        w_mismatch * mismatch_score
+        + w_distance * distance_score
+        + w_payback * equity_score
     )
+    
+   
+    print(priority_df["Score"][0:10])
+    
 # 6. Sort by score 
     # Sort in descending order (highest score is best)
     priority_df = priority_df.sort_values("Score", ascending=False)
 
-    columns_to_print = ["CITY", "AGE", "ABO_BLOOD_GROUP", "Total_mismatches", "Distance", "Equity", "Score"]
+    columns_to_print = ["RECIPIENTNUMBER", "CITY", "AGE", "ABO_BLOOD_GROUP", "Total_mismatches", "Distance", "Equity", "Score"]
+    print("sorted by score")
     print(priority_df[columns_to_print].head(5))
 
     # Find the highest score
@@ -279,7 +302,8 @@ def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep, verb
     # If more than one row has the highest score, use RECIPIENTNUMBER for tiebreaker
     if len(highest_score_df) > 1:
         highest_score_df = highest_score_df.sort_values("RECIPIENTNUMBER", ascending=True)
-
+        print("selected highest score")
+    print(highest_score_df.head(5))
     # Return the top option
     return highest_score_df.head(1)
 
@@ -393,27 +417,111 @@ def filter_owed_to_hospitals(organ, owed_df):
     return selected_cities, city_row_counts
 """
 
-def owed_organs_table_for_donor_city(organ):
+def owed_to_organs_table_for_donor_city(organ):
     donor_city = organ.city
     rows = []
+
     for hosp in Hospital.registry:
+        # Skip hospitals that do not track obligations toward this donor city
         if donor_city not in hosp.organ_exchange_table.columns:
             continue
-        col = hosp.organ_exchange_table[donor_city]  # Series indexed by organ type
-        for organ_type, lst in col.items():
-            for abo, age in lst:
+
+        # Column = all obligations this hospital owes TO donor_city
+        obligations = hosp.organ_exchange_table[donor_city]
+
+        # obligations is a Series indexed by organ type
+        for organ_type, owed_list in obligations.items():
+            for abo, age in owed_list:
                 rows.append({
                     "OwingHospitalCity": hosp.city,
                     "OrganType": organ_type,
                     "ABO": abo,
                     "Age": age
                 })
-    df = pd.DataFrame(rows)
-    #print(df)
-    return df
+    print("Owed to")
+    print(pd.DataFrame(rows))
+    return pd.DataFrame(rows)
 
-def filter_owed_to_hospitals(organ, owed_df):
+def organs_donor_city_owes(organ):
+    donor_city = organ.city
+    rows = []
+
+    # Find the hospital corresponding to the donor city
+    donor_hospital = None
+    for hosp in Hospital.registry:
+        if hosp.city == donor_city:
+            donor_hospital = hosp
+            break
+
+    if donor_hospital is None:
+        return pd.DataFrame()  # donor city not found
+
+    # donor_hospital.organ_exchange_table:
+    # columns = cities donor_city owes TO
+    # rows    = organ types
+    for receiving_city in donor_hospital.organ_exchange_table.columns:
+        obligations = donor_hospital.organ_exchange_table[receiving_city]
+
+        for organ_type, owed_list in obligations.items():
+            for abo, age in owed_list:
+                rows.append({
+                    "ReceivingHospitalCity": receiving_city,
+                    "OrganType": organ_type,
+                    "ABO": abo,
+                    "Age": age
+                })
+    print("Owes")
+    print(pd.DataFrame(rows))
+    return pd.DataFrame(rows)
+
+
+def compute_city_equity_scores(owed_to_df, owes_df, donor_city):
+    # Start with all cities in the system, all with score 0
+    scores = {city: 0 for city in city_country_map.keys()}
+
+    # 1. Hospitals that OWE TO donor_city
+    #    - They get -1 per organ
+    #    - Donor city gets +1 per organ
+    if not owed_to_df.empty:
+        for city in owed_to_df["OwingHospitalCity"]:
+            scores[city] -= 1
+        scores[donor_city] += len(owed_to_df)
+
+    # 2. Hospitals the donor city OWES organs TO
+    #    - They get +1 per organ
+    #    - Donor city gets -1 per organ
+    if not owes_df.empty:
+        for city in owes_df["ReceivingHospitalCity"]:
+            scores[city] += 1
+        scores[donor_city] -= len(owes_df)
+
+    # Normalize by population proportion
+    normalized_scores = {}
+    for city, score in scores.items():
+        pop = city_pop_proportion.get(city, None)
+        if pop is None or pop == 0:
+            raise
+        else:
+            normalized_scores[city] = score / pop
+
+    # Convert to DataFrame
+    result_df = pd.DataFrame(
+        [{"HospitalCity": city, "Score": normalized_scores[city]}
+         for city in city_country_map.keys()]
+    )
+
+    return result_df
+
+
+
+
+
+
+
+
+"""def filter_owed_to_hospitals(organ, owed_df):
     # Handle empty DataFrame case
+
     if owed_df.empty:
         print("Warning: Owed organs DataFrame is empty")
         return [], {}
@@ -454,9 +562,37 @@ def filter_owed_to_hospitals(organ, owed_df):
 
     except Exception as e:
         print(f"Error in filtering owed hospitals: {e}")
-        return [], {}
+        return [], {}"""
 
 def calculate_equity_score(priority_df, organ):
+    if not isinstance(priority_df, pd.DataFrame):
+        raise TypeError("priority_df must be a pandas DataFrame")
+
+    priority_df = priority_df.reset_index(drop=True)
+
+    # Compute obligations
+    owed_to_df = owed_to_organs_table_for_donor_city(organ)
+    owes_df = organs_donor_city_owes(organ)
+
+    # Compute city-level equity scores
+    equity_df = compute_city_equity_scores(owed_to_df, owes_df, organ.city)
+
+    # Merge equity scores into priority_df
+    priority_df = priority_df.merge(
+        equity_df,
+        left_on="CITY",
+        right_on="HospitalCity",
+        how="left"
+    )
+
+    # Rename and clean up
+    priority_df = priority_df.rename(columns={"Score": "Equity"})
+    priority_df = priority_df.drop(columns=["HospitalCity"])
+
+    return priority_df
+
+
+"""def calculate_equity_score(priority_df, organ):
     # Ensure the input is a DataFrame
     if not isinstance(priority_df, pd.DataFrame):
         raise TypeError("priority_df must be a pandas DataFrame")
@@ -465,9 +601,11 @@ def calculate_equity_score(priority_df, organ):
     priority_df = priority_df.reset_index(drop=True)
 
     # Handle potential empty DataFrame from owed_organs_table_for_donor_city
-    owed_to_df = owed_organs_table_for_donor_city(organ)
+    owed_to_df = owed_to_organs_table_for_donor_city(organ)
+    owes_df= organs_donor_city_owes(organ)
+
     
-    # If owed_to_df is empty, set all Distance_scores to 0
+    # If owed_to_df is empty, set all Equity to 0
     if owed_to_df.empty:
         priority_df = priority_df.copy()
         priority_df["Equity"] = 0
@@ -502,6 +640,4 @@ def calculate_equity_score(priority_df, organ):
         else:
             priority_df.loc[index, "Equity"] = 0
     
-    return priority_df
-
-
+    return priority_df"""

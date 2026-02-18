@@ -100,13 +100,13 @@ summary_file= get_summary_file(match_file)"""
 #count_mismatches("['A69', 'A74']", "['A1', 'A9']", True)
 
 
-match_file= r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\testing_files\validation_data\SIM_5\matching_20260212_145444.csv"
+#match_file= r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\testing_files\validation_data\SIM_5\matching_20260212_145444.csv"
 #plot_mismatch_histograms(match_file)
 
 
-df = pd.read_csv(match_file)
+#df = pd.read_csv(match_file)
 
-check_priority_groups(df).to_csv("priority_summary.csv")
+#check_priority_groups(df).to_csv("priority_summary.csv")
 
 #summarize_organ_flows_countries(csv_path=match_file)
 #calculate_implementation_stats(csv_path=match_file)
@@ -114,3 +114,4 @@ check_priority_groups(df).to_csv("priority_summary.csv")
 #print(summary_file)
 #plot_transfer_heatmap(summary_file)
 
+#print(haversine_distance(-21.8954, 64.1355,26.7290, 58.3776))
