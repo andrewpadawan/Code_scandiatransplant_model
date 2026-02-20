@@ -4,7 +4,7 @@ import random
 from main import run_Scandiatransplant_model
 import csv
 from datetime import datetime
-# Objective function: Rastrigin function
+# Objective function: Scandiatransplant output function
 def objective_function(w_mismatch,w_distance, w_payback):
     number_matches, total_distance_travelled_incl_local, total_mismatches, average_equity_coefficient= run_Scandiatransplant_model(w_mismatch,w_distance, w_payback)
 
@@ -13,15 +13,13 @@ def objective_function(w_mismatch,w_distance, w_payback):
     mismatch_score= 1- (total_mismatches/(6*number_matches))
     
     value= average_equity_coefficient + mismatch_score + distance_score
+    print("Value:")
+    print(value)
     return value
 
 # Neighbor function: small random change
-def get_neighbor(x, step_size=0.1):
-    neighbor = x[:]
-    index = random.randint(0, len(x) - 1)
-    neighbor[index] += random.uniform(-step_size, step_size)
-    return neighbor
 
+"""Original
 def get_neighbor(x, step_size=0.1):
     # Copy the current solution
     neighbor = x[:]
@@ -31,9 +29,34 @@ def get_neighbor(x, step_size=0.1):
     
     # Add a small random perturbation
     neighbor[index] += random.uniform(-step_size, step_size)
-    
+    print("Neighbour")
+    print(neighbor)
     return neighbor
+"""
 
+#new version bounces back from the boundary
+def get_neighbor(x, step_size=0.2, bounds=None):
+    neighbor = x[:]
+    index = random.randint(0, len(x) - 1)
+
+    # Apply perturbation
+    neighbor[index] += random.uniform(-step_size, step_size)
+
+    # Reflective boundary handling
+    if bounds is not None:
+        low, high = bounds[index]
+
+        # If value goes below the lower bound
+        if neighbor[index] < low:
+            excess = low - neighbor[index]
+            neighbor[index] = low + excess   # reflect upward
+
+        # If value goes above the upper bound
+        elif neighbor[index] > high:
+            excess = neighbor[index] - high
+            neighbor[index] = high - excess  # reflect downward
+
+    return neighbor
 
 
 def simulated_annealing(objective, bounds, n_iterations, step_size, temp):
@@ -43,7 +66,7 @@ def simulated_annealing(objective, bounds, n_iterations, step_size, temp):
     # Create CSV file and write header 
     with open(csv_path, "w", newline="") as f:
         writer = csv.writer(f) 
-        writer.writerow(["iteration", "temperature", "best_eval"])
+        writer.writerow(["iteration", "temperature", "current_eval", "current_solution", "best_eval", "best_solution"])
     # Initial solution (random within bounds)
     best = [random.uniform(b[0], b[1]) for b in bounds]
     best_eval = objective(*best)   # unpack weights
@@ -51,8 +74,11 @@ def simulated_annealing(objective, bounds, n_iterations, step_size, temp):
     scores = [best_eval]
 
     for i in range(n_iterations):
-        # Temperature schedule
-        t = temp / float(i + 1)
+        # Temperature schedule: Geometric cooling
+        alpha = 0.97
+        t = temp * (alpha ** i)
+
+        # exponential t = temp / float(i + 1)
 
         # Generate neighbor
         candidate = get_neighbor(current, step_size)
@@ -74,18 +100,19 @@ def simulated_annealing(objective, bounds, n_iterations, step_size, temp):
         # Log to CSV 
         with open(csv_path, "a", newline="") as f: 
             writer = csv.writer(f) 
-            writer.writerow([i, t, best_eval])
+            writer.writerow([i, t,current_eval,current, best_eval, best])
         # Optional progress print
         if i % 100 == 0:
-            print(f"Iteration {i}, Temp {t:.3f}, Best {best_eval:.5f}")
+            print(f"Iteration {i}, Temp {t:.3f}, Candidate Eval {candidate_eval:.5f}, Current Eval {current_eval:.5f}, Best Eval {best_eval:.10f}")
 
     return best, best_eval, scores
 
 # Define problem domain
-bounds = [(-5.0, 5.0) for _ in range(3)] # for a 3-dimensional function
-n_iterations = 3
-step_size = 0.2
-temp = 10
+bounds = [(-1.0, 1.0) for _ in range(3)] # for a 3-dimensional function
+#n_iterations = 1000
+n_iterations= 1000
+step_size = 0.3
+temp = 15
 
 # Perform the simulated annealing search
 best, score, scores = simulated_annealing(objective_function, bounds, n_iterations, step_size, temp)

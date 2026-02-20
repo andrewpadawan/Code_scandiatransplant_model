@@ -354,10 +354,10 @@ def summarize_organ_flows_countries(csv_path, output_dir="logs/summary_logs"):
     os.makedirs(output_dir, exist_ok=True)
 
     summary_path = os.path.join(output_dir, f"summary_{tag}.csv")
-    flow_path = os.path.join(output_dir, f"city_flows_{tag}.csv")
+    #flow_path = os.path.join(output_dir, f"city_flows_{tag}.csv")
 
     summary.to_csv(summary_path, index=False)
-    city_pair_counts.to_csv(flow_path, index=False)
+    #city_pair_counts.to_csv(flow_path, index=False)
 
     # -----------------------------
     # 11. Return results
@@ -366,7 +366,7 @@ def summarize_organ_flows_countries(csv_path, output_dir="logs/summary_logs"):
         "summary_table": summary,
         "city_flow_table": city_pair_counts,
         "summary_path": summary_path,
-        "flow_path": flow_path
+        #"flow_path": flow_path
     }
 
 

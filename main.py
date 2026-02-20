@@ -34,7 +34,7 @@ def run_Scandiatransplant_model(w_mismatch,w_distance, w_payback):
     #donor_generator.generate_donor(10, 1, 10)
     #recipient_generator.generate_recipient(40, 1, 10)
 
-    print("Initialize matching module")
+    print("Initialize simulation module")
     # LOAD SCENARIOS
     scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\opt_metaheuristics.json")
 
@@ -62,7 +62,7 @@ def run_Scandiatransplant_model(w_mismatch,w_distance, w_payback):
     # Loop through timesteps starting from 1
     for t in timesteps_to_process:
         
-        print("In timestep:" + str(t))
+        #print("In timestep:" + str(t))
         
         log_timestep(logger, t)
         #print("TIMESTEP " + str(t)+ " ____________________________")

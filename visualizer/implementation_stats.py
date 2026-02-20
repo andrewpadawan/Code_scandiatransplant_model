@@ -7,7 +7,7 @@ from matching.match_utils import count_mismatches
 # Calculate total number of mismatches
 # Calculate distance travelled
 # Calculate equity coefficient
-
+import numpy as np
 
 import os
 import re
@@ -223,8 +223,6 @@ def calculate_distance_travelled(df):
 
 def calculate_equity_coefficent(df):
 
-
-    # Optional: ensure numeric columns are parsed correctly
     numeric_cols = [
         "NUM_EXPORTED",
         "NUM_IMPORTED",
@@ -233,10 +231,19 @@ def calculate_equity_coefficent(df):
     ]
     df[numeric_cols] = df[numeric_cols].apply(pd.to_numeric, errors="coerce")
 
-    df["equity_coeff"] = 1 - ( (df["NUM_IMPORTED"] - df["NUM_EXPORTED"]).abs() / df["TOTAL_KIDNEYS_TRANSPLANTED"] )
+    # Compute numerator once
+    diff = (df["NUM_IMPORTED"] - df["NUM_EXPORTED"]).abs()
+
+    # Safe equity coefficient: 0 when denominator is zero
+    df["equity_coeff"] = np.where(
+        df["TOTAL_KIDNEYS_TRANSPLANTED"] == 0,
+        0,
+        1 - (diff / df["TOTAL_KIDNEYS_TRANSPLANTED"])
+    )
 
     average_equity_coeff = df["equity_coeff"].mean()
     return df, average_equity_coeff
+
 
 
 def calculate_mismatches(df):
