@@ -65,7 +65,7 @@ def log_match_csv_dynamic(timestep, organ, donor_row, recipient_df, log_timestam
 
     # Add organ-specific columns
     organ_cols = ["ORGAN_ID", "ORGAN_TYPE", "EXCHANGE_OBLIGATION", "PRIORITY_GROUP"]
-    optimization_cols= ["Total_mismatches", "Distance_score", "Equity", "Score"]
+    optimization_cols= ["Mismatch_score", "Distance","Distance_score", "Equity_score","Equity_scaled", "Score"]
     all_headers = ["TIMESTEP"] + organ_cols + donor_cols + recipient_cols + optimization_cols
 
     # Prepare row data

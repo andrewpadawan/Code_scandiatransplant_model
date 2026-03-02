@@ -12,6 +12,6 @@
     {"city": "Helsinki"},
     {"city": "Tartu"}
   ],
-"donor_list": "C:\\Users\\reddr\\OneDrive\\Andrea\\Master in Computer Science and Engineering\\Thesis\\Code\\Scandiatransplant_modelling\\testing_files\\optimization\\metaheuristics\\advanced_donor.csv",
-"recipient_list": "C:\\Users\\reddr\\OneDrive\\Andrea\\Master in Computer Science and Engineering\\Thesis\\Code\\Scandiatransplant_modelling\\testing_files\\optimization\\metaheuristics\\advanced_recipient.csv"
+"donor_list": "C:\\Users\\reddr\\Documents\\Scandiatransplant_modelling\\testing_files\\optimization\\metaheuristics\\advanced_donor.csv",
+"recipient_list": "C:\\Users\\reddr\\Documents\\Scandiatransplant_modelling\\testing_files\\optimization\\metaheuristics\\advanced_recipient.csv"
 }

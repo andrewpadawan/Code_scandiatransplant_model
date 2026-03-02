@@ -34,10 +34,15 @@ from utils.aux_functions import *
 
 from matching.match_utils import *
 from visualizer.implementation_stats import *
+from metaheuristic.objective_function import *
+
+
+
 #organ_flows= pd.read_csv(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs")
 
-donor_generator.generate_donor(110, 1, 73, r"testing_files/advanced_donor.csv")
-recipient_generator.generate_recipient(678, 1, 73, r"testing_files/advanced_recipient.csv")
+#donor_generator.generate_donor(110, 1, 73, r"testing_files/advanced_donor.csv")
+#recipient_generator.generate_recipient(50, 1, 1, r"metaheuristic/files/advanced_recipient_10.csv")
+#donor_generator.generate_donor(50, 1, 1, r"metaheuristic/files/advanced_donor.csv")
 #recipient_generator.generate_recipient(3394, 1, 365, r"testing_files/advanced_recipient.csv")
 
 #check_age_distribution_by_groups_donors("testing_files/intermediate_donor.csv")
@@ -77,18 +82,18 @@ else:
 """
 
 
-"""
-df = pd.read_csv(r"logs/csv_logs/matching_20260110_190436.csv")
 
-check_priority_groups(df).to_csv("priority_summary.csv")
+#df = pd.read_csv(r"logs/csv_logs/matching_20260220_101309.csv")
 
-summarize_organ_flows_countries(csv_path=r"logs/csv_logs/matching_20260110_190436.csv")
-summary_file= get_summary_file(r"logs/csv_logs/matching_20260110_190436.csv")
+#check_priority_groups(df).to_csv("priority_summary.csv")
+
+#summarize_organ_flows_countries(csv_path=r"logs/csv_logs/matching_20260220_101309.csv")
+#summary_file= get_summary_file(r"logs/csv_logs/matching_20260220_101309.csv")
 #print(summary_file)
-plot_transfer_heatmap(summary_file)
-match_file= r"logs/csv_logs/matching_20260110_190436.csv"
+#plot_transfer_heatmap(summary_file)
+#match_file= r"logs/csv_logs/matching_20260225_143056.csv"""
 
-"""
+
 """
 match_file= r"matching_20260116_155953.csv"
 summarize_organ_flows_countries(csv_path=match_file)
@@ -115,3 +120,24 @@ summary_file= get_summary_file(match_file)"""
 #plot_transfer_heatmap(summary_file)
 
 #print(haversine_distance(-21.8954, 64.1355,26.7290, 58.3776))
+#objective_aprox(700,400,456.651233)
+
+from visualizer.find_plane import *
+from metaheuristic.objective_function import objective_aprox
+
+
+
+result = sample_and_plot_rbf_surface(
+    rbf_surface,
+    tied_points,
+    best_point,
+    N=250,
+    x_range=(0, 1000),
+    y_range=(0, 1000),
+    threshold=1.75,
+    objective_approx=objective_aprox
+
+)
+
+
+print("Number of best points:", result["mask_best"].sum())

@@ -26,3 +26,5 @@ class Hospital:
             print("Exchange duties:\n")
             print(self.organ_exchange_table.to_string(col_space=12))
         print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+
+    

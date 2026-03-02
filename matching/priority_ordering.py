@@ -119,7 +119,7 @@ def calculate_waited_months(recipient_row, timestep):
     return months_on_wl
 
 
-def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep,w_mismatch= 1.0,w_distance=1.0,w_payback=1.0, verbose=False):
+def ordering_priority_7_metaheuristic(recipient_df, organ: Organ,w_mismatch= 1.0,w_distance=1.0,w_payback=1.0, verbose=False):
 
     """After the exchange priority, the original list is sorted by:
     1. ABO identical
@@ -217,7 +217,7 @@ def ordering_priority_7_metaheuristic(recipient_df, organ: Organ, timestep,w_mis
         + w_payback * equity_score
     )
     
-   
+
     #print(priority_df["Score"][0:10])
     
 # 6. Sort by score 

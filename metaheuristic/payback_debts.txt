@@ -1,0 +1,43 @@
+=== Exchange table for Copenhagen ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney                 []           []           []           []           []           []           []           []           []           []           []
+
+=== Exchange table for Aarhus ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney                 []           []           []           []           []           []           []           []           []           []           []
+
+=== Exchange table for Odense ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney          [(O, 62)]           []           []           []           []           []           []           []           []    [(O, 59)]           []
+
+=== Exchange table for Skane ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney                 []           []           []           []           []    [(O, 66)]           []           []           []           []           []
+
+=== Exchange table for Gothenburg ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney                 []    [(O, 35)]           []           []           []           []           []           []           []           []           []
+
+=== Exchange table for Stockholm ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney                 []           []           []           []           []           []           []           []           []           []           []
+
+=== Exchange table for Uppsala ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney          [(O, 49)]           []           []           []           []           []           []           []           []           []           []
+
+=== Exchange table for Oslo ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney                 []           []           []           []           []           []           []           []           []           []           []
+
+=== Exchange table for Reykjavik ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney                 []           []           []           []           []           []           []           []           []           []           []
+
+=== Exchange table for Helsinki ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney                 []           []           []           []           []           []           []           []           []           []           []
+
+=== Exchange table for Tartu ===
+                   Aarhus   Copenhagen       Odense        Skane   Gothenburg    Stockholm      Uppsala         Oslo    Reykjavik     Helsinki        Tartu
+kidney                 []    [(O, 49)]           []           []           []           []           []           []           []    [(O, 85)]           []
