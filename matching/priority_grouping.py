@@ -83,32 +83,7 @@ def local_cascading_priority_allocation(recipient_df, organ, timestep, verbose= 
         ordered_LAMP= ordering_priority_2_to_7(LAMP, organ,timestep,verbose)
         print("LAMP")
         return ordered_LAMP, AllocationPriority.LOCAL
-    """
-    priority_2= check_priority_2(recipient_df, organ, verbose)
-    if not priority_2.empty:
-        ordered_priority_2= ordering_priority_2_to_7(priority_2,organ, timestep,verbose)
-        print("Priority 2")
-        return ordered_priority_2, AllocationPriority.LOCAL
-    
-    priority_3= check_priority_3(recipient_df, organ, verbose)
-    if not priority_3.empty:
-        ordered_priority_3= ordering_priority_2_to_7(priority_3,organ, timestep, verbose)
-        print("Priority 3")
-        return ordered_priority_3, AllocationPriority.LOCAL
-    
-    priority_4= check_priority_4(recipient_df, organ, verbose)
-    if not priority_4.empty:
-        ordered_priority_4= ordering_priority_2_to_7(priority_4,organ, timestep,verbose)
-        print("Priority 4")
-        return ordered_priority_4, AllocationPriority.LOCAL
-    
-    priority_5= check_priority_5(recipient_df, organ, verbose)
-    if not priority_5.empty:
-        ordered_priority_5= ordering_priority_2_to_7(priority_5,organ, timestep,verbose)
-        print("Priority 5")
-        return ordered_priority_5, AllocationPriority.LOCAL
-    #No payback because its local
-    """
+ 
     matched_locally= match_compatible(recipient_df, organ, verbose)
     if not matched_locally.empty:
         ordered_matched_locally= ordering_priority_2_to_7(matched_locally,organ,timestep,verbose)
@@ -168,9 +143,6 @@ def handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, verb
     return recipient_df[0:0], AllocationPriority.NONE
 
 
-
-    
-    
 
 def check_priority_1(recipient_df, organ, verbose):
     if verbose:
