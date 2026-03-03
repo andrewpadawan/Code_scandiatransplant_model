@@ -22,20 +22,10 @@ from utils.check_distributions import *
 logger = get_matching_logger()
 
 
-
-
-
-#donor_generator.generate_donor(10, 1, 10)
-#recipient_generator.generate_recipient(40, 1, 10)
-
 print("Initialize matching module")
 # LOAD SCENARIOS
-scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\scenarios\opt_sctp_waitlist.json")
+scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"scenarios\advanced_scenario.json")
 
-
-#for country in scandiatransplant.member_countries:
-#    country.print()
-#print(scandiatransplant.recipient_waitlist.df)
 
 # Group both DataFrames by TIMESTEP
 recipient_groups = df_ALL_recipients.groupby("TIMESTEP_ENTERED")
@@ -92,27 +82,19 @@ for t in timesteps_to_process:
     scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,False,"sctp", False)
     
 
-    #for hospital in Hospital.registry:
-    #    hospital.print()
-
-
-
     if incoming_match_file is not None:
         match_file= incoming_match_file
     
 
-    #print("After matching")
-    #print(scandiatransplant.donor_list.df)
-    
-
-#print(str(match_file))
-#print(scandiatransplant.recipient_waitlist.df)
-#print(scandiatransplant.donor_list.df)
 
 
 #animate_organ_flows(csv_path=match_file, shapefile_path=r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\book_keeping\ne_110m_admin_0_countries\ne_110m_admin_0_countries.shp")
 
 #plot_organ_flow_graph_on_map(csv_path=match_file)
+for hospital in Hospital.registry:
+    print(f"=== Exchange table for {hospital.city} ===")
+    print(hospital.organ_exchange_table.to_string(col_space=12))
+    print()
 
 
 df = pd.read_csv(match_file)

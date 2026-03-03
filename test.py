@@ -35,9 +35,9 @@ from utils.aux_functions import *
 from matching.match_utils import *
 from visualizer.implementation_stats import *
 #organ_flows= pd.read_csv(r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\csv_logs")
-
 #donor_generator.generate_donor(550, 1, 365, r"testing_files/advanced_donor.csv")
-#recipient_generator.generate_recipient(10, 1, 1, r"testing_files/advanced_recipient.csv")
+donor_generator.generate_donor(2750, 1, 1825, r"testing_files/advanced_donor.csv")
+recipient_generator.generate_recipient(8862, 1, 1825, r"testing_files/advanced_recipient.csv")
 #recipient_generator.generate_recipient(3394, 1, 365, r"testing_files/advanced_recipient.csv")
 
 #check_age_distribution_by_groups_donors("testing_files/intermediate_donor.csv")
@@ -100,14 +100,15 @@ summary_file= get_summary_file(match_file)"""
 #count_mismatches("['A69', 'A74']", "['A1', 'A9']", True)
 
 
-match_file= r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\testing_files\validation_data\SIM_1\matching_20260212_164920.csv"
+#match_file= r"C:\Users\reddr\OneDrive\Andrea\Master in Computer Science and Engineering\Thesis\Code\Scandiatransplant_modelling\testing_files\validation_data\SIM_5\matching_20260212_145444.csv"
+#plot_mismatch_histograms(match_file)
 
-"""
-df = pd.read_csv(match_file)
 
-check_priority_groups(df).to_csv("priority_summary.csv")"""
+#df = pd.read_csv(match_file)
 
-print(summarize_organ_flows_export_import(csv_path=match_file))
+#check_priority_groups(df).to_csv("priority_summary.csv")
+
+#print(summarize_organ_flows_export_import(csv_path=match_file))
 #calculate_implementation_stats(csv_path=match_file)
 #summary_file= get_summary_file(match_file)
 #print(summary_file)
