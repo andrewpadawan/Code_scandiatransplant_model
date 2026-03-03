@@ -37,7 +37,7 @@ def run_Scandiatransplant_model(w_mismatch,w_distance, w_payback):
     print("Initialize simulation module")
     # LOAD SCENARIOS
     #scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\Documents\Scandiatransplant_modelling\scenarios\opt_metaheuristics.json")
-    scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"C:\Users\reddr\Documents\Scandiatransplant_modelling\scenarios\advanced_scenario.json")
+    scandiatransplant, hospitals_loaded, df_ALL_recipients, df_ALL_donors, organ_list= scenario_loader.load_scenario(r"scenarios\advanced_scenario.json")
 
 
 
@@ -136,11 +136,6 @@ def run_Scandiatransplant_model(w_mismatch,w_distance, w_payback):
     print("Finished simulation module")
     return number_matches, total_distance_travelled_incl_local, total_mismatches, average_equity_coefficient
 
-run_Scandiatransplant_model(897.9248053603744, 868.8626798032985, 556.6010114592439)
-run_Scandiatransplant_model(266.03956762824043, 222.0631885608456, 154.50440100957368)
-run_Scandiatransplant_model(517.2494022667479, 497.18918243507534, 311.1212720832668)
-run_Scandiatransplant_model(557.6089222392195, 541.5793595477875, 337.0920303611644)
-run_Scandiatransplant_model(279.6887099623149, 385.3366689848432, 143.511001195082)
-run_Scandiatransplant_model(240.8384049913941, 152.0800053226971, 144.8903566893536)
+
 run_Scandiatransplant_model(220.04756753989946, 296.89636583263774, 145.7762794043648)
 
