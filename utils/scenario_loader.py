@@ -75,15 +75,7 @@ def load_local_waiting_list(data, hospitals):
 
     return scandiatransplant, df_recipients, df_donors, organ_list
     
-    """  scandiatransplant= Scandiatransplant(hospitals, ScandiatransplantWaitList(pd.read_csv(recipient_list)))
-
-    for count in relevant_countries:
-        scandiatransplant.member_countries.append(Country(count))
-
-        for hos in hospitals:
-            if hos.country == count:
-                count.member_hospitals.append(hos)
-         """
+    
         # Step 3: Group hospitals by country and create Country objects
 
 def load_organs(df_donors):
