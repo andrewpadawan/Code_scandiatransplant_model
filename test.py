@@ -122,11 +122,10 @@ summary_file= get_summary_file(match_file)"""
 #print(haversine_distance(-21.8954, 64.1355,26.7290, 58.3776))
 #objective_aprox(700,400,456.651233)
 
-from visualizer.find_plane import *
+#from visualizer.find_plane import *
 from metaheuristic.objective_function import objective_aprox
 
-
-
+"""
 result = sample_and_plot_rbf_surface(
     rbf_surface,
     tied_points,
@@ -138,6 +137,8 @@ result = sample_and_plot_rbf_surface(
     objective_approx=objective_aprox
 
 )
+"""
 
 
-print("Number of best points:", result["mask_best"].sum())
+#print("Number of best points:", result["mask_best"].sum())
+objective_aprox(100,1000,10)

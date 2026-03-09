@@ -245,6 +245,116 @@ def ordering_priority_7_metaheuristic(recipient_df, organ: Organ,w_mismatch= 1.0
     return highest_score_df.head(1)
 
 
+def ordering_priority_7_metaheuristic_NO_EQUITY(recipient_df, organ: Organ,w_mismatch= 1.0,w_distance=1.0,w_payback_legacy= 0.0, verbose=False):
+    print("Using priority 7 no equity ordering")
+    """After the exchange priority, the original list is sorted by:
+    1. ABO identical
+    2. Lowest DRB1 mismatches
+    3. Lowest A+B mismatches
+    4. Longest waiting time (lowest RECIPIENTNUMBER)
+
+    New list:
+    1. Use only ABO identical
+    ! Only is negative crossmatch
+    2. Calculate all mismatches
+    3. Calculate all distances
+    4. calculate equity by means of payback debt
+    5. calculate a score and sort by it
+    6. If still more than one, sort by time on waiting list
+    """
+
+# 1) use only ABO identical if there are any to keep the ordering consistent with SCTP rules
+    ABO_identical_df = ABO_identical(organ, recipient_df)
+    priority_df = ABO_identical_df if not ABO_identical_df.empty else recipient_df
+
+    if len(priority_df) == 1:
+        return priority_df
+# b) Only keep if negative crossmatch
+    negative_crossmatch_df = priority_df[ ~priority_df.apply(lambda row: virtual_crossmatch(row, organ), axis=1) ]
+    #IF NEGATIVEcrossmatch is empty so will be priority_df, function returns empty df
+    priority_df = negative_crossmatch_df 
+
+    if len(priority_df) == 1:
+        return priority_df
+# 2. Calculate all mismatches
+    dr_mismatches = []
+    a_mismatches = []
+    b_mismatches = []
+
+    for _, row in priority_df.iterrows():
+        #print(type(row["Genomic_HLA-A"])) 
+        #print(row["Genomic_HLA-A"])
+        dr_mismatches.append(count_mismatches(organ.geno_HLA_DRB1, row["Genomic_HLA-DRB1"]))
+        a_mismatches.append(count_mismatches(organ.geno_HLA_A, row["Genomic_HLA-A"]))
+        b_mismatches.append(count_mismatches(organ.geno_HLA_B, row["Genomic_HLA-B"]))
+
+    priority_df = priority_df.copy()
+    priority_df["DRB1_mismatches"] = dr_mismatches
+    priority_df["AB_mismatches"] = [a + b for a, b in zip(a_mismatches, b_mismatches)]
+    total_mismatches= [d + a + b for d, a, b in zip(dr_mismatches, a_mismatches, b_mismatches)]
+    priority_df["Total_mismatches"] = total_mismatches
+
+# 3. Calculate all distances
+    distances= calculate_distance(priority_df, organ)
+    priority_df["Distance"] = distances
+
+# 4. calculate equity by means of payback debt 
+    
+    #print(equity_score)
+
+# 5. Use these and their coefficient to calculate a score, rank by the score
+     # scoring: choose coefficients; example weights
+     # adjust or compute as needed
+
+    # ensure no-length mismatch
+    assert len(priority_df) == len(priority_df["Total_mismatches"])
+
+    #mismatch score (1 if zero mismatches, 0 if 6 mismatches)
+    #print(type(priority_df["Total_mismatches"][0]))
+    mismatch_score= 1-(priority_df["Total_mismatches"]/6.0)
+    priority_df["Mismatch_score"]= mismatch_score.astype(float)
+    #print(mismatch_score)
+    #distance score (0 if max distance travelled, 0 if local) Max distance is Reykjavik to Tartu
+    max_distance= 5442.19
+    distance_score= 1- (priority_df["Distance"]/max_distance)
+    priority_df["Distance_score"]= distance_score.astype(float)
+
+
+
+
+    # compute score, handling NaNs (treat NaN distance as large penalty)
+    priority_df["Score"] = (
+        w_mismatch * mismatch_score
+        + w_distance * distance_score
+        
+    )
+    
+
+    #print(priority_df["Score"][0:10])
+    
+# 6. Sort by score 
+    # Sort in descending order (highest score is best)
+    priority_df = priority_df.sort_values("Score", ascending=False)
+    if verbose:
+        columns_to_print = ["RECIPIENTNUMBER", "CITY", "Total_mismatches", "Mismatch_score", "Distance","Distance_score", "Equity_score","Equity_scaled", "Score"]
+        print("sorted by score")
+        print(priority_df[columns_to_print].head(5))
+
+    # Find the highest score
+    highest_score = priority_df["Score"].max()
+
+    # Filter rows with the highest score
+    highest_score_df = priority_df[priority_df["Score"] == highest_score]
+    
+
+
+    # If more than one row has the highest score, use RECIPIENTNUMBER for tiebreaker
+    if len(highest_score_df) > 1:
+        highest_score_df = highest_score_df.sort_values("RECIPIENTNUMBER", ascending=True)
+        #print("selected highest score")
+    #print(highest_score_df.head(5))
+    # Return the top option
+    return highest_score_df.head(1)
 
 
 #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

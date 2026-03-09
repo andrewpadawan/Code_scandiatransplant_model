@@ -4,7 +4,7 @@ import random
 from main import run_Scandiatransplant_model
 import csv
 from datetime import datetime
-from metaheuristic.objective_function import objective_aprox
+from metaheuristic.objective_function import objective_aprox_V2
 # Objective function: Scandiatransplant output function
 """def objective_function(w_mismatch,w_distance, w_payback):
     print("Calling objective")
@@ -186,7 +186,7 @@ def simulated_annealing(objective, bounds, n_iterations, step_size, temp, initia
 
 
 # Define problem domain
-bounds = [(0.0, 1000.0) for _ in range(3)] # for a 3-dimensional function
+bounds = [(0.0, 1000.0) for _ in range(2)] # for a 2-dimensional function
 #n_iterations = 1000
 n_iterations= 300
 step_size = 0.3 #0.5 are big jumps
@@ -199,7 +199,7 @@ temp = 2
 #print(f'Best Solution: {best}')
 #print(f'Best Score: {score}')
 
-n_runs = 6  # however many you want
+n_runs = 20  # however many you want
 all_results = []
 
 global_best = None
@@ -209,7 +209,7 @@ for run in range(n_runs):
     print(f"\n=== SA RUN {run+1}/{n_runs} ===")
 
     best, score, scores = simulated_annealing(
-        objective_aprox,
+        objective_aprox_V2,
         bounds,
         n_iterations,
         step_size,

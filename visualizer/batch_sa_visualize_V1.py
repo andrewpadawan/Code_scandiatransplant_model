@@ -178,10 +178,10 @@ ax1.scatter(
 )
 
 # tied points = light pink
-ax1.scatter(tied_points["x"], tied_points["y"], color="#ffb6c1", s=60, edgecolor="black")
+ax1.scatter(tied_points["x"], tied_points["y"], color="grey", s=60, edgecolor="black")
 
-# best point = fuchsia
-ax1.scatter(best_point["x"], best_point["y"], color="fuchsia", s=100, edgecolor="black")
+# best point = black
+ax1.scatter(best_point["x"], best_point["y"], color="black", s=100, edgecolor="black")
 
 ax1.set_xlabel("Mismatch weight")
 ax1.set_ylabel("Distance weight")
@@ -200,13 +200,13 @@ ax2.scatter(
 # Tied points (light pink)
 ax2.scatter(
     tied_points["x"], tied_points["z"],
-    color="#ffb6c1", s=60, edgecolor="black"
+    color="grey", s=60, edgecolor="black"
 )
 
-# Best point (fuchsia)
+# Best point (black)
 ax2.scatter(
     best_point["x"], best_point["z"],
-    color="fuchsia", s=100, edgecolor="black"
+    color="black", s=100, edgecolor="black"
 )
 
 # Project the SAME 3D planes into this 2D plot
@@ -235,16 +235,18 @@ ax3.scatter(
 # Tied points
 ax3.scatter(
     tied_points["y"], tied_points["z"],
-    color="#ffb6c1", s=60, edgecolor="black"
+    color="grey", s=60, edgecolor="black"
 )
 
 # Best point
 ax3.scatter(
     best_point["y"], best_point["z"],
-    color="fuchsia", s=100, edgecolor="black"
+    color="black", s=100, edgecolor="black"
 )
 
-
+ax3.set_xlabel("Distance weight")
+ax3.set_ylabel("Equity weight")
+ax3.set_title("Distance vs Weight")
 
 
 
@@ -259,13 +261,13 @@ ax4.scatter(
 # tied points = light pink
 ax4.scatter(
     tied_points["x"], tied_points["y"], tied_points["z"],
-    color="#ffb6c1", s=120, edgecolor="black"
+    color="grey", s=120, edgecolor="black"
 )
 
-# best point = fuchsia
+# best point = black
 ax4.scatter(
     best_point["x"], best_point["y"], best_point["z"],
-    color="fuchsia", s=150, edgecolor="black"
+    color="black", s=150, edgecolor="black"
 )
 
 # Planes in 3D
@@ -324,13 +326,13 @@ ax.scatter(
 # Tied points (light pink)
 ax.scatter(
     tied_points["x"], tied_points["y"], tied_points["z"],
-    color="#ffb6c1", s=120, edgecolor="black"
+    color="grey", s=120, edgecolor="black"
 )
 
-# Best point (fuchsia)
+# Best point (black)
 ax.scatter(
     best_point["x"], best_point["y"], best_point["z"],
-    color="fuchsia", s=150, edgecolor="black"
+    color="black", s=150, edgecolor="black"
 )
 
 # Create meshgrid for the planes
@@ -380,40 +382,52 @@ plt.show()
 # ============================================================
 
 fig2 = plt.figure(figsize=(14, 12))
+# For all three subplots:
+
+
+
+
+
+
 
 # ---- 1. Mismatch vs Distance ----
 ax1b = fig2.add_subplot(221)
 
 # tied points (light pink)
-ax1b.scatter(tied_points["x"], tied_points["y"], color="#ffb6c1", s=80, edgecolor="black")
+ax1b.scatter(tied_points["x"], tied_points["y"], color="grey", s=80, edgecolor="black")
 
-# best point (fuchsia)
-ax1b.scatter(best_point["x"], best_point["y"], color="fuchsia", s=140, edgecolor="black")
+# best point (black)
+ax1b.scatter(best_point["x"], best_point["y"], color="black", s=140, edgecolor="black")
 
 ax1b.set_xlabel("Mismatch weight")
 ax1b.set_ylabel("Distance weight")
 ax1b.set_title("Mismatch vs Distance (Best + Tied Only)")
 
+ax1b.set_xlim(0, 1000)
+ax1b.set_ylim(0, 1000)
+
 # ---- 2. Mismatch vs Equity ----
 ax2b = fig2.add_subplot(222)
 
-ax2b.scatter(tied_points["x"], tied_points["z"], color="#ffb6c1", s=80, edgecolor="black")
-ax2b.scatter(best_point["x"], best_point["z"], color="fuchsia", s=140, edgecolor="black")
+ax2b.scatter(tied_points["x"], tied_points["z"], color="grey", s=80, edgecolor="black")
+ax2b.scatter(best_point["x"], best_point["z"], color="black", s=140, edgecolor="black")
 
 ax2b.set_xlabel("Mismatch weight")
 ax2b.set_ylabel("Equity weight")
 ax2b.set_title("Mismatch vs Equity (Best + Tied Only)")
-
+ax2b.set_xlim(0, 1000)
+ax2b.set_ylim(0, 1000)
 # ---- 3. Distance vs Equity ----
 ax3b = fig2.add_subplot(223)
 
-ax3b.scatter(tied_points["y"], tied_points["z"], color="#ffb6c1", s=80, edgecolor="black")
-ax3b.scatter(best_point["y"], best_point["z"], color="fuchsia", s=140, edgecolor="black")
+ax3b.scatter(tied_points["y"], tied_points["z"], color="grey", s=80, edgecolor="black")
+ax3b.scatter(best_point["y"], best_point["z"], color="black", s=140, edgecolor="black")
 
 ax3b.set_xlabel("Distance weight")
 ax3b.set_ylabel("Equity weight")
 ax3b.set_title("Distance vs Equity (Best + Tied Only)")
-
+ax3b.set_xlim(0, 1000)
+ax3b.set_ylim(0, 1000)
 """
 # ---- 4. 3D plot ----
 ax4b = fig2.add_subplot(224, projection="3d")
@@ -421,12 +435,12 @@ ax4b = fig2.add_subplot(224, projection="3d")
 # Scatter points
 ax4b.scatter(
     tied_points["x"], tied_points["y"], tied_points["z"],
-    color="#ffb6c1", s=140, edgecolor="black"
+    color="grey", s=140, edgecolor="black"
 )
 
 ax4b.scatter(
     best_point["x"], best_point["y"], best_point["z"],
-    color="fuchsia", s=200, edgecolor="black"
+    color="black", s=200, edgecolor="black"
 )
 
 # === SAME PLANES, LESS TRANSLUCENT ===
@@ -455,20 +469,21 @@ ax4b.set_ylabel("Distance weight")
 ax4b.set_zlabel("Equity weight")
 ax4b.set_title("3D View (Best + Tied Only)")
 """
+
 # ---- 4. 3D plot ----
 ax4b = fig2.add_subplot(224, projection="3d")
 
 # Scatter points
 ax4b.scatter(
     tied_points["x"], tied_points["y"], tied_points["z"],
-    color="#ffb6c1", s=140, edgecolor="black"
+    color="grey", s=140, edgecolor="black"
 )
 
 ax4b.scatter(
     best_point["x"], best_point["y"], best_point["z"],
-    color="fuchsia", s=200, edgecolor="black"
+    color="black", s=200, edgecolor="black"
 )
-
+"""
 # ============================================================
 # FIT PLANE THROUGH BEST POINT + TWO BEST TIED POINTS
 # ============================================================
@@ -493,11 +508,14 @@ ax = fig.add_subplot(111, projection="3d")
 ax.scatter(X, Y, Z, color="red", s=60, edgecolor="black")
 
 # Plot surface
-ax.plot_surface(xx, yy, zz, alpha=0.5, color="gold", edgecolor="none")
+ax.plot_surface(xx, yy, zz, alpha=0.5, color="gold", edgecolor="none")"""
 
 ax.set_xlabel("Mismatch weight")
 ax.set_ylabel("Distance weight")
 ax.set_zlabel("Equity weight")
 ax.set_title("Non-parametric RBF Surface Fit")
+ax4b.set_xlim(0, 1000)
+ax4b.set_ylim(0, 1000)
+ax4b.set_zlim(0, 1000)
 
 plt.show()

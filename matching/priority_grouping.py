@@ -61,7 +61,7 @@ def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplan
     """
     priority_7= check_priority_7(recipient_df, organ, verbose)
     if not priority_7.empty:
-        ordered_priority_7= ordering_priority_7_metaheuristic(priority_7,organ, w_mismatch, w_distance,w_payback)
+        ordered_priority_7= ordering_priority_7_metaheuristic_NO_EQUITY(priority_7,organ, w_mismatch, w_distance,w_payback)
         #print("Priority 7")
         return ordered_priority_7, AllocationPriority.PRIORITY_7
     

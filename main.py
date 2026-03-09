@@ -137,5 +137,25 @@ def run_Scandiatransplant_model(w_mismatch,w_distance, w_payback):
     return number_matches, total_distance_travelled_incl_local, total_mismatches, average_equity_coefficient
 
 
-run_Scandiatransplant_model(220.04756753989946, 296.89636583263774, 145.7762794043648)
 
+run_Scandiatransplant_model(200.24192977416442, 409.1681514455609, 1)
+run_Scandiatransplant_model(297.26433233081787, 608.2010386816108, 1)
+run_Scandiatransplant_model(465.34719864343555, 922.2968927727939, 1)
+run_Scandiatransplant_model(340.4205940602128, 674.6314506164276, 1)
+run_Scandiatransplant_model(105.44134495180398, 205.86913061351007, 1)
+run_Scandiatransplant_model(349.43264790342255, 713.0716675547825, 1)
+run_Scandiatransplant_model(285.606178623826, 571.9851426138772, 1)
+run_Scandiatransplant_model(370.9625770302941, 739.6375381660981, 1)
+run_Scandiatransplant_model(128.78253434620547, 232.0267656745305, 1)
+run_Scandiatransplant_model(491.43446599669494, 974.8076237401524, 1)
+run_Scandiatransplant_model(49.50344263524885, 95.00758418616051, 1)
+run_Scandiatransplant_model(82.5044451036727, 163.82961508152675, 1)
+run_Scandiatransplant_model(78.2104557354295, 129.8527464120167, 1)
+run_Scandiatransplant_model(82.5044451036727, 163.82961508152675, 1)
+run_Scandiatransplant_model(503.9650814502086, 1.8344893848013522, 1)
+run_Scandiatransplant_model(103.78141809812125, 208.80596075445706, 1)
+run_Scandiatransplant_model(268.273589031753, 541.1221522773317, 1)
+run_Scandiatransplant_model(758.6396198711446, 419.9215918846899, 1)
+run_Scandiatransplant_model(118.86976595912397, 236.4113097770033, 1)
+run_Scandiatransplant_model(27.825233125429886, 56.08475738950128, 1)
+run_Scandiatransplant_model(223.58484371739846, 141.15032931390041, 1)
