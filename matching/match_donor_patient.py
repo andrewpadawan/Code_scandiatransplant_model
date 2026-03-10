@@ -26,6 +26,8 @@ def matching(scandiatransplant, timestep,log_timestamp,organs_at_t,local, heuris
         scandiatransplant, log_path=_abo_HLA_match(scandiatransplant,timestep, log_timestamp,organs_at_t, verbose=verbose, **kwargs)
     elif heuristic == "sctp":
         scandiatransplant, log_path=_sctp(scandiatransplant,timestep, log_timestamp,organs_at_t,local, verbose=verbose, **kwargs)
+    elif heuristic == "OPTbte":
+         scandiatransplant, log_path=_bte(scandiatransplant,timestep, log_timestamp,organs_at_t,local, verbose=verbose, **kwargs)
     else:
         raise ValueError(f"Unknown heuristic: {heuristic}")
     
@@ -154,13 +156,23 @@ def _abo_HLA_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[
 
 
 
-def _sctp(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],local,verbose=False,  **kwargs):
+def _bte(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],local,verbose=False,  **kwargs):
 
     scandiatransplant, log_path= sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
     
     return scandiatransplant, log_path if 'log_path' in locals() else None
 
 
+def _sctp(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],local,verbose=False,  **kwargs):
+    if local:
+        
+        #Call the local allocation function here
+        scandiatransplant, log_path= local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
+    else:
+        scandiatransplant, log_path= sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
+    
+    return scandiatransplant, log_path if 'log_path' in locals() else None
+#-------------------------------------------------------
 
 def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose= False,  **kwargs):
     log_path= None

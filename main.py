@@ -79,7 +79,7 @@ for t in timesteps_to_process:
 
     #Match the Scandiatransplant waiting list
 
-    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,False,"sctp", False)
+    scandiatransplant, incoming_match_file= matching(scandiatransplant,t, log_timestamp,organs_at_t,False,"OPTbte", False)
     
 
     if incoming_match_file is not None:
