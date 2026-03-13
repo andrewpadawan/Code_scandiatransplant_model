@@ -9,7 +9,7 @@ from matching.priority_grouping import *
 logger = get_matching_logger()
 has_logged_matching = False
 
-def matching(scandiatransplant, timestep,log_timestamp,organs_at_t,local, w_mismatch, w_distance,w_payback, heuristic="greedy", verbose=False,  **kwargs):
+def matching(scandiatransplant, timestep,log_timestamp,organs_at_t,local, w_mismatch=1.0, w_distance=1.0,w_payback=1.0, heuristic="greedy", verbose=False,  **kwargs):
     global has_logged_matching
 
     if not has_logged_matching:
@@ -25,15 +25,17 @@ def matching(scandiatransplant, timestep,log_timestamp,organs_at_t,local, w_mism
     elif heuristic == "abo_HLA_match":
         scandiatransplant, log_path=_abo_HLA_match(scandiatransplant,timestep, log_timestamp,organs_at_t, verbose=verbose, **kwargs)
     elif heuristic == "sctp":
-        scandiatransplant, log_path=_sctp(scandiatransplant,timestep, log_timestamp,organs_at_t,local,w_mismatch, w_distance,w_payback, verbose=verbose, **kwargs)
+        scandiatransplant, log_path=_sctp(scandiatransplant,timestep, log_timestamp,organs_at_t,local, verbose=verbose, **kwargs)
+    elif heuristic == "meta":
+        scandiatransplant, log_path=_meta(scandiatransplant,timestep, log_timestamp,organs_at_t,local,w_mismatch, w_distance,w_payback, verbose=verbose, **kwargs)
     else:
         raise ValueError(f"Unknown heuristic: {heuristic}")
     
     return scandiatransplant, log_path
 
 def _greedy_match(scandiatransplant, timestep, log_timestamp, verbose=True, **kwargs):
-    if verbose:
-        print("Using greedy matching")
+    
+    print("Using greedy matching")
     # Access scandiatransplant.recipient_waitlist, donor_list, etc.
     #1) sort thw waitlist by entry time
     scandiatransplant.recipient_waitlist.sort("TIMESTEP_ENTERED")
@@ -152,15 +154,24 @@ def _abo_HLA_match(scandiatransplant,timestep, log_timestamp, organs_at_t: List[
 
     return scandiatransplant, log_path if 'log_path' in locals() else None
 
-
-
-def _sctp(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],local,w_mismatch, w_distance,w_payback,verbose=False,  **kwargs):
+def _sctp(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],local,verbose=False,  **kwargs):
     if local:
         
         #Call the local allocation function here
         scandiatransplant, log_path= local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
     else:
-        scandiatransplant, log_path= sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,w_mismatch, w_distance,w_payback,verbose)
+        scandiatransplant, log_path= sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
+    
+    return scandiatransplant, log_path if 'log_path' in locals() else None
+
+
+def _meta(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],local,w_mismatch, w_distance,w_payback,verbose=False,  **kwargs):
+    if local:
+        
+        #Call the local allocation function here
+        scandiatransplant, log_path= local_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,verbose)
+    else:
+        scandiatransplant, log_path= meta_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t,w_mismatch, w_distance,w_payback,verbose)
     
     return scandiatransplant, log_path if 'log_path' in locals() else None
 
@@ -168,7 +179,7 @@ def _sctp(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ],lo
 #TODO add payback rules
 #TODO log matches, log which priority group was used
 
-def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], w_mismatch, w_distance,w_payback, verbose= False,  **kwargs):
+def meta_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], w_mismatch, w_distance,w_payback, verbose= False,  **kwargs):
     log_path= None
     if verbose:
         print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
@@ -202,7 +213,7 @@ def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp,
             break
 
         #Call the function that makes the matching, it will return a single row df
-        matched_recipient_df, priority_level_assigned= cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose, w_mismatch, w_distance,w_payback)
+        matched_recipient_df, priority_level_assigned= meta_cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose, w_mismatch, w_distance,w_payback)
         
         if not matched_recipient_df.empty:
             matched_recipient = matched_recipient_df.iloc[[0]]
@@ -221,6 +232,70 @@ def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp,
                 AllocationPriority.PRIORITY_4,
                 AllocationPriority.PRIORITY_5,
                 AllocationPriority.PRIORITY_7
+            ):
+                log_debt_payback_ABO_age(matched_recipient, organ)
+
+        else:
+            print("No match was found for this organ")
+            scandiatransplant.remove_organ_by_id(organ.organ_id)
+            scandiatransplant.unmatched_organs.append(organ.organ_id)
+            continue
+
+
+    return scandiatransplant, log_path if 'log_path' in locals() else None
+
+def sctp_scandiatransplant_allocation(scandiatransplant,timestep, log_timestamp, organs_at_t: List[Organ], verbose= False,  **kwargs):
+    log_path= None
+    if verbose:
+        print("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+        print("Using Scandiatransplant matching")
+    recipient_df = None
+    
+    """if scandiatransplant.donor_list.df.empty:
+        if verbose:
+            print("No donor was available at this timestep")
+        return scandiatransplant, None"""
+    if len(scandiatransplant.organ_list)==0:
+        if verbose:
+            print("No organ was available at this timestep")
+        return scandiatransplant, None
+    #3) Make and print the match to a log file
+    for organ in organs_at_t:
+        #restart loop
+        matched_recipient = None
+        if not scandiatransplant.recipient_waitlist.df.empty: 
+            recipient_df= scandiatransplant.recipient_waitlist.df.copy()
+        else:
+            if verbose:
+                print("Recipient list was empty")
+            return scandiatransplant, None
+        #++++++++++
+
+        if not organ.exchange_obligation:
+            continue
+        if len(recipient_df) == 0:
+            print("Not enough recipients left to match this organ.")
+            break
+
+        #Call the function that makes the matching, it will return a single row df
+        matched_recipient_df, priority_level_assigned= cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose)
+        
+        if not matched_recipient_df.empty:
+            matched_recipient = matched_recipient_df.iloc[[0]]
+                #log the matches
+            log_match(logger, organ, matched_recipient, priority_level_assigned)
+            log_path= log_match_csv_dynamic(timestep,organ, organ.donor_row, matched_recipient, log_timestamp, priority_level_assigned)
+            #4) Remove donor and recipients from scandiatransplant
+            scandiatransplant.remove_donor(organ.donor_id)
+            scandiatransplant.remove_recipient(matched_recipient["RECIPIENTNUMBER"].values[0])
+            scandiatransplant.remove_organ_by_id(organ.organ_id)
+            #log paybacks (for obligated exchange, priority groups 1-5)
+            if priority_level_assigned in (
+                AllocationPriority.PRIORITY_1,
+                AllocationPriority.PRIORITY_2,
+                AllocationPriority.PRIORITY_3,
+                AllocationPriority.PRIORITY_4,
+                AllocationPriority.PRIORITY_5
             ):
                 log_debt_payback_ABO_age(matched_recipient, organ)
 

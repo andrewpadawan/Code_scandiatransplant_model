@@ -9,7 +9,72 @@ from matching.priority_enum import *
 import copy
 
 
-def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose, w_mismatch, w_distance,w_payback):
+def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose):
+    #This function retunrs the chosen recipient (one recipient, in df form) or an empty df
+    if verbose:
+        print(f"Allocating organ {organ.organ_id} at Scandiatransplant level")
+    priority_1= check_priority_1(recipient_df, organ, verbose)
+    if not priority_1.empty:
+        ordered_priority_1= ordering_priority_1(priority_1,organ, timestep,verbose )
+        #print("Priority 1")
+        return ordered_priority_1, AllocationPriority.PRIORITY_1
+    
+    priority_2= check_priority_2(recipient_df, organ, verbose)
+    if not priority_2.empty:
+        ordered_priority_2= ordering_priority_2_to_5(priority_2,organ, timestep,verbose)
+        #print("Priority 2")
+        return ordered_priority_2, AllocationPriority.PRIORITY_2
+    
+    priority_3= check_priority_3(recipient_df, organ, verbose)
+    if not priority_3.empty:
+        ordered_priority_3= ordering_priority_2_to_5(priority_3,organ, timestep, verbose)
+        #print("Priority 3")
+        return ordered_priority_3, AllocationPriority.PRIORITY_3
+    
+    priority_4= check_priority_4(recipient_df, organ, verbose)
+    if not priority_4.empty:
+        ordered_priority_4= ordering_priority_2_to_5(priority_4,organ, timestep,verbose)
+        #print("Priority 4")
+        return ordered_priority_4, AllocationPriority.PRIORITY_4
+    
+    priority_5= check_priority_5(recipient_df, organ, verbose)
+    if not priority_5.empty:
+        ordered_priority_5= ordering_priority_2_to_5(priority_5,organ, timestep,verbose)
+        #print("Priority 5")
+        return ordered_priority_5, AllocationPriority.PRIORITY_5
+    
+    #CHECK PAYBACK HERE
+    
+    payback_recipient_df= pay_back_abo_age_payback(recipient_df, organ, timestep, verbose)
+    if not payback_recipient_df.empty:
+        # this functions calles local_cascading_priority_allocation which returns already ordered match list ordered_payback= ordering_priority_2_to_7(payback_recipient_df,organ, timestep,verbose)
+        #print("Payback")
+        return payback_recipient_df, AllocationPriority.PAYBACK
+    
+    # LAMP AND LOCAL LIST
+    
+    priority_6= check_priority_6(recipient_df, organ, verbose)
+    if not priority_6.empty:
+        ordered_priority_6= ordering_priority_2_to_5(priority_6, organ,timestep,verbose)
+        print("Priority 6")
+        return ordered_priority_6, AllocationPriority.PRIORITY_6
+    
+    priority_7= check_priority_7(recipient_df, organ, verbose)
+    if not priority_7.empty:
+        ordered_priority_7= ordering_priority_2_to_5(priority_7,organ,timestep,verbose)
+        #print("Priority 7")
+        return ordered_priority_7, AllocationPriority.PRIORITY_7
+    
+    #print("SCTP suplus")
+    matched_recipient_df, priority_level_assigned= handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, False)
+    return matched_recipient_df, priority_level_assigned
+    #if no priority groups found, return empty dataframe
+    #return recipient_df[0:0]
+
+
+
+
+def meta_cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplant, verbose, w_mismatch, w_distance,w_payback):
     #This function retunrs the chosen recipient (one recipient, in df form) or an empty df
     if verbose:
         print(f"Allocating organ {organ.organ_id} at Scandiatransplant level")
@@ -59,7 +124,7 @@ def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplan
         print("Priority 6")
         return ordered_priority_6, AllocationPriority.PRIORITY_6
     """
-    priority_7= check_priority_7(recipient_df, organ, verbose)
+    priority_7= meta_check_priority_7(recipient_df, organ, verbose)
     if not priority_7.empty:
         ordered_priority_7= ordering_priority_7_metaheuristic_NO_EQUITY(priority_7,organ, w_mismatch, w_distance,w_payback)
         #print("Priority 7")
@@ -68,9 +133,6 @@ def cascading_priority_allocation(recipient_df, organ, timestep,scandiatransplan
     #print("SCTP suplus")
     matched_recipient_df, priority_level_assigned= handle_surplus_organs(recipient_df, organ, timestep, scandiatransplant, False)
     return matched_recipient_df, priority_level_assigned
-    #if no priority groups found, return empty dataframe
-    #return recipient_df[0:0]
-
 # ...........................................................
 def local_cascading_priority_allocation(recipient_df, organ, timestep, verbose= False):
 #This function reuses the priority groups and orderings from Scandiatransplant, but applies them to the local waiting list
@@ -315,12 +377,39 @@ def check_priority_6(recipient_df, organ, verbose):
     return recipient_df.loc[valid_indices]
 
 
-def check_priority_7(recipient_df, organ, verbose):
+def meta_check_priority_7(recipient_df, organ, verbose):
     if verbose:
         print("For priority 7")
 # THIS IS ONE THE PROCUREMENTE CENTER'S OWN WAITING LIST
     organ_location= organ.city
     local_recipient_df = recipient_df #changed so that the whole Scandiatransplant waiting list is considered
+
+    valid_indices = []
+    for idx, recipient_row in local_recipient_df.iterrows():
+        if not is_ABO_compatible(recipient_row, organ):
+            continue
+        #A negative crossmatch means that that organ can be transplanted into the recipient, if posiitive they are incompatible
+        if virtual_crossmatch(recipient_row, organ):
+            continue
+        # Wrap row into one-row DataFrame for compatibility filter
+        recipient_one_df = recipient_row.to_frame().T
+        #compatible_df = filter_HLA_A_B_DRB1_compatible(organ, recipient_one_df)
+        #ORDERED BY LESS MISMATCHES
+        compatible_df=recipient_one_df
+        if compatible_df.empty:
+            continue
+        
+        valid_indices.append(idx)
+    
+    # Slice the original DataFrame to return only the valid recipients
+    return recipient_df.loc[valid_indices]
+
+def check_priority_7(recipient_df, organ, verbose):
+    if verbose:
+        print("For priority 7")
+# THIS IS ONE THE PROCUREMENTE CENTER'S OWN WAITING LIST
+    organ_location= organ.city
+    local_recipient_df = recipient_df[recipient_df["CITY"] == organ_location]
 
     valid_indices = []
     for idx, recipient_row in local_recipient_df.iterrows():
